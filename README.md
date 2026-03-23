@@ -1,0 +1,1 @@
+#amr_foxglove_panels
