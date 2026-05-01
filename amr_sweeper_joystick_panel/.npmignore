@@ -103,5 +103,11 @@ dist
 # Build output
 www/js/*
 
+# Repository build history
+*.foxe
+build/
+archive/
+scripts/
+
 # MacOS
 .DS_Store

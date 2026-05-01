@@ -2,24 +2,32 @@ import { Topic, SettingsTreeNodes, SettingsTreeFields, SettingsTreeAction } from
 import { produce } from "immer";
 import * as _ from "lodash-es";
 
+import { controllerMappings } from "./controller-mappings";
+
 export type Config = {
   dataSource: string;
   subJoyTopic: string;
   gamepadId: number;
+  controllerMappingId: string;
   publishMode: boolean;
   pubJoyTopic: string;
   publishFrameId: string;
   displayMode: string;
   debugGamepad: boolean;
   layoutName: string;
-  mapping_name: string;
 };
 
 export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAction): Config {
   return produce(prevConfig, (draft) => {
     if (action.action === "update") {
       const { path, value } = action.payload;
-      _.set(draft, path.slice(1), value);
+      const configPath = path.slice(1);
+
+      if (configPath[0] === "gamepadId" && typeof value === "string") {
+        _.set(draft, configPath, Number(value));
+      } else {
+        _.set(draft, configPath, value);
+      }
     }
   });
 }
@@ -86,21 +94,15 @@ export function buildSettingsTree(config: Config, topics?: readonly Topic[]): Se
         },
       ],
     },
-    gamepadMapping: {
-      label: "GP->Joy Mapping",
+    controllerMappingId: {
+      label: "Controller Mapping",
       input: "select",
-      value: "default",
+      value: config.controllerMappingId,
       disabled: config.dataSource !== "gamepad",
-      options: [
-        {
-          label: "Default",
-          value: "default",
-        },
-        {
-          label: "TODO Make selectable",
-          value: "todo",
-        },
-      ],
+      options: controllerMappings.map((mapping) => ({
+        label: mapping.label,
+        value: mapping.id,
+      })),
     },
   };
   const publishFields: SettingsTreeFields = {
@@ -166,18 +168,6 @@ export function buildSettingsTree(config: Config, topics?: readonly Topic[]): Se
       ],
     },
 
-    // mapping: {
-    //   label: "Mapping",
-    //   input: "select",
-    //   value: config.mapping_name,
-    //   disabled: true, // config.displayMode === "auto",
-    //   options: [
-    //     {
-    //       label: "Custom",
-    //       value: "custom",
-    //     },
-    //   ],
-    // },
     debugGamepad: {
       label: "Debug Gamepad",
       input: "boolean",

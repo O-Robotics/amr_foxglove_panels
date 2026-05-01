@@ -69,6 +69,11 @@ web_modules/
 # Output of 'npm pack'
 *.tgz
 
+# Foxglove packages should be kept in build/ or archive/
+/*.foxe
+!/build/*.foxe
+!/archive/*.foxe
+
 # Yarn Integrity file
 .yarn-integrity
 

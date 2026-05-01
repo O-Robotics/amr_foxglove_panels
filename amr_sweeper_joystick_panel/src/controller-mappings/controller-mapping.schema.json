@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "controller-mapping.schema.json",
+  "title": "AMR Sweeper Controller Mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "label",
+    "match",
+    "output",
+    "axisMappings",
+    "buttonMappings"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mapping": {
+          "type": "string"
+        },
+        "idIncludesAny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["messageType", "axes", "buttons"],
+      "properties": {
+        "messageType": {
+          "type": "string",
+          "const": "sensor_msgs/msg/Joy"
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/outputSlot"
+          }
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/outputSlot"
+          }
+        }
+      }
+    },
+    "axisMappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/axisMapping"
+      }
+    },
+    "buttonMappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/buttonMapping"
+      }
+    }
+  },
+  "$defs": {
+    "outputSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "name", "neutral"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "neutral": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "index"],
+      "properties": {
+        "type": {
+          "enum": ["axis", "button"]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "axisMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "source", "target"],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "index"],
+              "properties": {
+                "type": {
+                  "const": "axis"
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "index", "read"],
+              "properties": {
+                "type": {
+                  "const": "button"
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "read": {
+                  "const": "value"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "positiveIndex", "negativeIndex"],
+              "properties": {
+                "type": {
+                  "const": "buttonPair"
+                },
+                "positiveIndex": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "negativeIndex": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "transform": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scale": {
+              "type": "number"
+            },
+            "offset": {
+              "type": "number"
+            },
+            "deadzone": {
+              "type": "number",
+              "minimum": 0
+            },
+            "clamp": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "buttonMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "source", "target"],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "index"],
+          "properties": {
+            "type": {
+              "const": "button"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        }
+      }
+    }
+  }
+}

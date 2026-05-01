@@ -30,7 +30,10 @@ Download the latest `.foxe` release [here](https://github.com/joshnewans/foxglov
 With Node and Foxglove installed
  - `npm install` to install dependencies
  - `npm run local-install` to build and install for a local copy of the Foxglove Studio Desktop App
- - `npm run package` to package it up into a `.foxe` file
+ - `npm run package` to increment the patch version, package a `.foxe` file, move the previous latest build into `archive/`, place the new build in `build/`, and append `build/build-log.md`
+
+The current packaged panel lives in `build/`. Older `.foxe` packages live in `archive/`.
+If you need to run the raw Foxglove packaging command without moving artifacts or changing versions, use `npm run foxglove:package`.
 
 ### Snap Users
 

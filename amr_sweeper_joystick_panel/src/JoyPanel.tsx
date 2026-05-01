@@ -7,13 +7,15 @@ import {
   SettingsTreeAction,
 } from "@foxglove/studio";
 import { FormGroup, FormControlLabel, Switch } from "@mui/material";
-import { useEffect, useLayoutEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 
 // import { GamepadDebug } from "./components/GamepadDebug";
 import { GamepadView } from "./components/GamepadView";
 import { SimpleButtonView } from "./components/SimpleButtonView";
 import kbmapping1 from "./components/kbmapping1.json";
+import { defaultControllerMappingId, getControllerMapping } from "./controller-mappings";
+import { joyFromGamepad } from "./controller-mappings/applyControllerMapping";
 import { useGamepad } from "./hooks/useGamepad";
 import { Config, buildSettingsTree, settingsActionReducer } from "./panelSettings";
 import { Joy } from "./types";
@@ -58,7 +60,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.displayMode ??= "auto";
     partialConfig.debugGamepad ??= false;
     partialConfig.layoutName ??= "steamdeck";
-    partialConfig.mapping_name ??= "TODO";
+    partialConfig.controllerMappingId ??= defaultControllerMappingId;
     partialConfig.gamepadId ??= 0;
     return partialConfig as Config;
   });
@@ -160,18 +162,15 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           return;
         }
 
-        const tmpJoy = {
-          header: {
-            frame_id: config.publishFrameId,
-            stamp: fromDate(new Date()), // TODO: /clock
-          },
-          axes: gp.axes.map((axis) => -axis),
-          buttons: gp.buttons.map((button) => (button.pressed ? 1 : 0)),
-        } as Joy;
+        const controllerMapping = getControllerMapping(config.controllerMappingId);
+        const tmpJoy = joyFromGamepad(gp, controllerMapping, {
+          frame_id: config.publishFrameId,
+          stamp: fromDate(new Date()), // TODO: /clock
+        });
 
         setJoy(tmpJoy);
       },
-      [config.dataSource, config.gamepadId, config.publishFrameId],
+      [config.controllerMappingId, config.dataSource, config.gamepadId, config.publishFrameId],
     ),
   });
 
