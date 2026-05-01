@@ -45,13 +45,11 @@ jobs:
         run: npm run package
 
       - name: List packaged files
-        run: find amr_sweeper_joystick_panel -name "*.foxe" -print
+        run: find . -name "*.foxe" -print
 
       - name: Upload .foxe artifact
         uses: actions/upload-artifact@v4
         with:
           name: amr-sweeper-joystick-panel
-          path: |
-            amr_sweeper_joystick_panel/*.foxe
-            amr_sweeper_joystick_panel/build/*.foxe
+          path: amr_sweeper_joystick_panel/build/*.foxe
           if-no-files-found: error
