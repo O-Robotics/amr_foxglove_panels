@@ -1,7 +1,10 @@
-name: Build Foxglove Panel
+name: Build Foxglove Joystick Panel
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -13,9 +16,13 @@ concurrency:
 
 jobs:
   build:
-    name: Build panel
+    name: Build joystick panel
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: amr_sweeper_joystick_panel
 
     steps:
       - name: Checkout repository
@@ -26,9 +33,20 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: amr_sweeper_joystick_panel/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build Foxglove panel
         run: npm run build
+
+      - name: Package Foxglove panel
+        run: npm run package
+
+      - name: Upload .foxe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amr-sweeper-joystick-panel
+          path: amr_sweeper_joystick_panel/*.foxe
+          if-no-files-found: error
