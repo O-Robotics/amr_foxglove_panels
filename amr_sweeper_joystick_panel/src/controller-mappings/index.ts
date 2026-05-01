@@ -1,7 +1,9 @@
 import psStandard from "./ps-standard.json";
 import type { ControllerMapping } from "./types";
 
-export const controllerMappings: ControllerMapping[] = [psStandard as ControllerMapping];
+export const controllerMappings: ControllerMapping[] = [
+  psStandard as unknown as ControllerMapping,
+];
 
 export const defaultControllerMappingId = "ps-standard";
 
