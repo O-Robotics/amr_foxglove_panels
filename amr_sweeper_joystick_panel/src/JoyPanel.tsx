@@ -7,7 +7,7 @@ import {
   SettingsTreeAction,
 } from "@foxglove/studio";
 import { FormGroup, FormControlLabel, Switch } from "@mui/material";
-import { useEffect, useLayoutEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from "react";
 import ReactDOM from "react-dom";
 
 // import { GamepadDebug } from "./components/GamepadDebug";
@@ -20,7 +20,7 @@ import {
   joyFromGamepad,
 } from "./controller-mappings/applyControllerMapping";
 import { useGamepad } from "./hooks/useGamepad";
-import { Config, buildSettingsTree, settingsActionReducer } from "./panelSettings";
+import { Config } from "./panelSettings";
 import { Joy } from "./types";
 
 type KbMap = {
@@ -144,12 +144,9 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.pubJoyTopic ??= "/joy";
     partialConfig.publishMode ??= false;
     partialConfig.publishFrameId ??= "";
-    partialConfig.dataSource ??= "sub-joy-topic";
+    partialConfig.dataSource = "gamepad";
     partialConfig.controllerMappingId ??= defaultControllerMappingId;
-    partialConfig.gamepadId ??= 0;
-    if (partialConfig.dataSource === "sub-joy-topic") {
-      partialConfig.publishMode = false;
-    }
+    partialConfig.gamepadId ??= -1;
     return partialConfig as Config;
   });
 
@@ -166,24 +163,31 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     return newKeys;
   }, [trackedKeys]);
 
-  const settingsActionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      setConfig((prevConfig) => settingsActionReducer(prevConfig, action));
-    },
-    [setConfig],
-  );
-
   const refreshConnectedGamepads = useCallback(() => {
     setGamepadIds(getConnectedGamepadIds());
   }, []);
 
-  // Register the settings tree
+  const noopSettingsActionHandler = useCallback((_action: SettingsTreeAction) => {
+    return;
+  }, []);
+
+  const activeGamepadId = useMemo(() => {
+    if (gamepadIds.length === 0) {
+      return undefined;
+    }
+    if (config.gamepadId >= 0 && gamepadIds.includes(config.gamepadId)) {
+      return config.gamepadId;
+    }
+    return gamepadIds[0];
+  }, [config.gamepadId, gamepadIds]);
+
+  // Hide the settings editor for the fixed PS-controller panel
   useEffect(() => {
     context.updatePanelSettingsEditor({
-      actionHandler: settingsActionHandler,
-      nodes: buildSettingsTree(config, topics, gamepadIds),
+      actionHandler: noopSettingsActionHandler,
+      nodes: {},
     });
-  }, [config, context, gamepadIds, settingsActionHandler, topics]);
+  }, [context, noopSettingsActionHandler]);
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {
@@ -249,7 +253,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
         refreshConnectedGamepads();
         console.log("Gamepad " + gp.index + " discconnected!");
 
-        if (config.dataSource !== "gamepad" || config.gamepadId !== gp.index) {
+        if (activeGamepadId == undefined || activeGamepadId !== gp.index) {
           return;
         }
 
@@ -260,16 +264,16 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           createNeutralJoy(controllerMapping, joyHeader(config.publishFrameId)),
         );
       },
-      [config.controllerMappingId, config.dataSource, config.gamepadId, config.publishFrameId, refreshConnectedGamepads],
+      [activeGamepadId, config.controllerMappingId, config.publishFrameId, refreshConnectedGamepads],
     ),
 
     didUpdate: useCallback(
       (gp: Gamepad) => {
-        if (config.dataSource !== "gamepad") {
+        if (activeGamepadId == undefined) {
           return;
         }
 
-        if (config.gamepadId !== gp.index) {
+        if (activeGamepadId !== gp.index) {
           return;
         }
 
@@ -283,9 +287,9 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
 
         setJoy(tmpJoy);
       },
-      [config.controllerMappingId, config.dataSource, config.gamepadId, config.publishFrameId],
+      [activeGamepadId, config.controllerMappingId, config.publishFrameId],
     ),
-    enabled: config.dataSource === "gamepad",
+    enabled: true,
   });
 
   // Keyboard mode
