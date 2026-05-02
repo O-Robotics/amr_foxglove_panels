@@ -1,89 +1,60 @@
-# foxglove-joystick
+# AMR Sweeper Joystick Panel
 
-This is an extension for [Foxglove Studio](https://github.com/foxglove/studio) that adds functionality for working with joysticks. It receives joystick data from a variety of inputs, and offers various ways to display it.
+Foxglove Studio panel for viewing, generating, and publishing ROS 2 `sensor_msgs/msg/Joy` messages.
 
-## Overview
+## What it does
 
-There are four main operating modes/input sources/use cases:
+- Subscribe to an existing `Joy` topic and display the current state.
+- Read a browser gamepad and publish mapped `Joy` output.
+- Generate `Joy` output from keyboard input.
+- Provide an interactive on-screen controller for touch or pointer input.
 
-| Mode | Functionality | Intended use case |
-| ----- | ------ | ------ |
-| Subscribe Mode | Subscribes to an existing ROS `Joy` topic | Monitoring a robot that is being teleoperated, or replaying a log and reviewing operator actions |
-| Gamepad Mode | Receives input from a locally-connected gamepad (and publishes it to a ROS `Joy` topic) | Live control of a robot using a gamepad connected to any Foxglove-supported device |
-| Keyboard Mode | Converts local keystrokes into `Joy` messages (for publishing) | Bench-testing a configuration that is primarily designed to use a gamepad but does not currently have one connected |
-| Interactive Display Mode | Makes the displayed indicators clickable/touchable (for publishing) | Controlling a robot from a touchscreen device |``
+## Data model
 
-![Panel Overview Screenshot](https://github.com/joshnewans/foxglove-joystick/blob/main/docs/screenshot1.png?raw=true)
+- Incoming topic type: `sensor_msgs/msg/Joy`
+- Published topic type: `sensor_msgs/msg/Joy`
 
-## Installation
+## Modes
 
-### Foxglove Studio Extension Marketplace
+- `sub-joy-topic`: monitor an existing `Joy` stream
+- `gamepad`: read a connected browser gamepad
+- `keyboard`: emit `Joy` messages from panel-focused key input
+- `interactive`: emit `Joy` messages from the custom controller UI
 
-In the Foxglove Studio Desktop app, use the Extension Marketplace (Profile menu in top-right -> Extensions) to find and install the Joystick panel.
+## Development
 
-### Releases
+Install dependencies:
 
-Download the latest `.foxe` release [here](https://github.com/joshnewans/foxglove-joystick/releases/latest) and drag-and-drop it onto the window of Foxglove Studio (Desktop or Web).
+```bash
+npm install
+```
 
-### Compile from source
+Build the extension:
 
-With Node and Foxglove installed
- - `npm install` to install dependencies
- - `npm run local-install` to build and install for a local copy of the Foxglove Studio Desktop App
- - `npm run package` to increment the patch version, package a `.foxe` file, move the previous latest build into `archive/`, place the new build in `build/`, and append `build/build-log.md`
+```bash
+npm run build
+```
 
-The current packaged panel lives in `build/`. Older `.foxe` packages live in `archive/`.
-If you need to run the raw Foxglove packaging command without moving artifacts or changing versions, use `npm run foxglove:package`.
+Install it into a local Foxglove Studio desktop setup:
 
-### Snap Users
+```bash
+npm run local-install
+```
 
-Right now it seems that this panel will **not** work with the `snap` version of Foxglove Studio. Snaps do not allow joystick input by default and I am looking into what is required to use it (possibly the Foxglove team enabling the `joystick` interface). 
+Package a `.foxe` bundle:
 
-### Steam Deck Users
+```bash
+npm run foxglove:package
+```
 
-Please follow [this guide](docs/steamdeck.md).
+## Project layout
 
+- `src/JoyPanel.tsx`: panel state, publishing, subscriptions, and input mode switching
+- `src/components/`: visual controller views and layouts
+- `src/controller-mappings/`: browser gamepad to ROS `Joy` mappings
+- `src/hooks/useGamepad.ts`: browser gamepad polling hook
 
+## Notes
 
-## Mapping
-
-Right now all "mapping" within the program is direct, but it is intended that there will be flexibility here. This is because different controllers (and in some cases the same controller on different platforms) will have the buttons/axes arranged in a different order. 
-
-Some more complex examples of this are D-Pads (sometimes register as two axes, sometimes four buttons) and triggers (sometimes register as axes + buttons, sometimes buttons with a variable value, unsupported by `Joy`).
-
-Thus it is expected to eventually need the following:
-
-| Mapping | Purpose | Current implementation |
-| ------- | ------- | ---------------------- |
-| Gamepad (numerical) -> Joy (or Keyboard -> Joy) | Defines how key pressed are mapped to `Joy` values (e.g. gamepad button 3 maps to joy button 4). | Direct mapping |
-| Joy -> Gamepad/Layout (named) | Defines how `Joy` values map into the Layout (e.g. joy button 4 maps to layout button "L1"). | Built into layout JSON (separate in future) |
-
-Also note that the HTML gamepad API seems to have the axes reversed compared to what typically comes out of the `joy` drivers, so the panel flips those values back automatically.
-
-## Layouts
-
-Currently consist of a `.json` to determine button locations and an entry in `GamepadBackground.tsx` for the background. Intention is for this to be more configurable in future.
-
-## Planned functionality/improvements
-
-- **Source modes**
-  - [x] Source Mode 1 (Subscriber)
-  - [x] Source Mode 2 (Gamepad)
-    - [ ] Option for a custom mapping from gamepad to `Joy` (e.g. GP 6-> Joy 8)
-    - [ ] Deadzones, inversion, scaling, etc.
-  - [x] Source Mode 3 (Keyboard)
-  - [x] Source Mode 4 (Interactive)
-- **Display modes**
-  - [x] Simple Auto-Generated Display
-    - [ ] Better identification of axes
-  - [x] Gamepad visual mimic
-    - [ ] Different options for the image
-    - [ ] Different options for mapping joy buttons to image buttons
-    - [x] Options for axes to be sticks, d-pads, triggers, or more
-    - [ ] General improved customisability
-
-
-
-## Contributions
-
-Thanks to [rgov](https://github.com/rgov) for creating [this repo](https://github.com/ARMADAMarineRobotics/studio-extension-gamepad) which I originally worked on this project from before rewriting it mostly from scratch (but have retained [useGamepads.ts](src/hooks/useGamepad.ts)).
+- Keyboard control only applies while the panel is focused.
+- Gamepad mappings are fail-closed: if the selected mapping does not match the connected controller, the panel neutralizes output instead of sending ambiguous commands.

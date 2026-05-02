@@ -1,13 +1,14 @@
 import { Button, LinearProgress } from "@mui/material";
 
+import type { Joy } from "../types";
+
 // TODO copy theming from another extension
 
-export function SimpleButtonView(props: any) {
-
-
+export function SimpleButtonView(props: { joy: Joy | undefined }) {
   const buttons = props.joy
-    ? props.joy.buttons.map((item: number, index: number) => (
+    ? props.joy.buttons.map((item, index) => (
         <Button
+          key={index}
           variant={item > 0 ? "contained" : "outlined"}
           size="large"
           color={item > 0 ? "error" : "primary"}
@@ -18,7 +19,7 @@ export function SimpleButtonView(props: any) {
     : [];
 
   const axes = props.joy
-    ? props.joy.axes.map((item: number, index: number) => (
+    ? props.joy.axes.map((item, index) => (
         <LinearProgress
           key={index}
           variant="determinate"

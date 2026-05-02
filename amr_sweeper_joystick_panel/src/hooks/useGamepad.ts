@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef } from "react";
 
 
 export function useGamepad(
-    {didConnect, didDisconnect, didUpdate}: {
+    {didConnect, didDisconnect, didUpdate, enabled}: {
         didConnect: (gamepad: Gamepad) => void,
         didDisconnect: (gamepad: Gamepad) => void,
         didUpdate: (gamepad: Gamepad) => void,
+        enabled: boolean,
     }
 ): void {
     // MDN says that valid request IDs are non-zero, so we use zero to indicate
@@ -30,23 +31,31 @@ export function useGamepad(
     // become stale as dependencies change. When this happens, cancel the old
     // function and schedule the new one. (Thanks Adam!)
     useEffect(() => {
+        if (!enabled) {
+            if (animationRequestId.current !== 0) {
+                window.cancelAnimationFrame(animationRequestId.current);
+                animationRequestId.current = 0;
+            }
+            return;
+        }
+
         if (animationRequestId.current !== 0) {
             window.cancelAnimationFrame(animationRequestId.current);
         }
 
         animationRequestId.current = 
             window.requestAnimationFrame(onAnimationFrame);
-    }, [onAnimationFrame]);
+    }, [enabled, onAnimationFrame]);
 
     const onConnect = useCallback((event: GamepadEvent) => {
         didConnect(event.gamepad);
 
         // Schedule an animation frame if there is not already one pending
-        if (animationRequestId.current === 0) {
+        if (enabled && animationRequestId.current === 0) {
             animationRequestId.current =
                 window.requestAnimationFrame(onAnimationFrame);
         }
-    }, [didConnect, onAnimationFrame]);
+    }, [didConnect, enabled, onAnimationFrame]);
 
     const onDisconnect = useCallback((event: GamepadEvent) => {
         didDisconnect(event.gamepad);

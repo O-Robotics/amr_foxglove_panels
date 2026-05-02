@@ -17,6 +17,15 @@ export type Config = {
   layoutName: string;
 };
 
+function buildGamepadOptions(selectedGamepadId: number, gamepadIds: readonly number[]): { label: string; value: string }[] {
+  const ids = Array.from(new Set([...gamepadIds, selectedGamepadId])).sort((a, b) => a - b);
+
+  return ids.map((id) => ({
+    label: id.toString(),
+    value: id.toString(),
+  }));
+}
+
 export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAction): Config {
   return produce(prevConfig, (draft) => {
     if (action.action === "update") {
@@ -37,7 +46,11 @@ export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAc
   });
 }
 
-export function buildSettingsTree(config: Config, topics?: readonly Topic[]): SettingsTreeNodes {
+export function buildSettingsTree(
+  config: Config,
+  topics?: readonly Topic[],
+  gamepadIds: readonly number[] = [],
+): SettingsTreeNodes {
   const dataSourceFields: SettingsTreeFields = {
     dataSource: {
       label: "Data Source",
@@ -80,24 +93,7 @@ export function buildSettingsTree(config: Config, topics?: readonly Topic[]): Se
       input: "select",
       value: config.gamepadId.toString(),
       disabled: config.dataSource !== "gamepad",
-      options: [
-        {
-          label: "0",
-          value: "0",
-        },
-        {
-          label: "1",
-          value: "1",
-        },
-        {
-          label: "2",
-          value: "2",
-        },
-        {
-          label: "TODO Make this auto populate",
-          value: "3",
-        },
-      ],
+      options: buildGamepadOptions(config.gamepadId, gamepadIds),
     },
     controllerMappingId: {
       label: "Controller Mapping",

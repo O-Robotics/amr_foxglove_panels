@@ -3,9 +3,7 @@
   "displayName": "OR-Joystick",
   "description": "Foxglove panel extension for joystick/gamepad control.",
   "publisher": "orob",
-  "homepage": "",
   "version": "0.0.10",
-  "license": "MIT",
   "main": "./dist/extension.js",
   "keywords": [],
   "scripts": {
@@ -14,7 +12,6 @@
     "lint:ci": "eslint --report-unused-disable-directives .",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "local-install": "foxglove-extension install",
-    "package": "node scripts/package-foxglove-build.mjs",
     "foxglove:package": "foxglove-extension package",
     "pretest": "foxglove-extension pretest"
   },
