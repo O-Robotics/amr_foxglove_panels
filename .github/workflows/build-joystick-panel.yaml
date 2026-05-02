@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -49,11 +49,38 @@ jobs:
           Temporary changelog generated in CI so foxglove-extension package can build a .foxe archive.
           EOF
 
+      - name: Archive existing packaged panels
+        run: |
+          mkdir -p archive
+          find . -maxdepth 1 -name "*.foxe" -exec mv {} archive/ \;
+
+      - name: Bump panel version
+        if: github.event_name != 'pull_request'
+        run: npm version patch --no-git-tag-version
+
       - name: Package Foxglove panel
         run: npm run foxglove:package
 
       - name: List packaged files
-        run: find . -maxdepth 1 -name "*.foxe" -print
+        run: |
+          find archive -maxdepth 1 -name "*.foxe" -print || true
+          find . -maxdepth 1 -name "*.foxe" -print
+
+      - name: Remove temporary changelog
+        run: rm -f CHANGELOG.md
+
+      - name: Commit packaged panel to repository
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A package.json package-lock.json archive *.foxe
+          if git diff --cached --quiet; then
+            echo "No packaged panel changes to commit."
+            exit 0
+          fi
+          git commit -m "Update packaged Foxglove panel [skip ci]"
+          git push
 
       - name: Upload .foxe artifact
         uses: actions/upload-artifact@v4

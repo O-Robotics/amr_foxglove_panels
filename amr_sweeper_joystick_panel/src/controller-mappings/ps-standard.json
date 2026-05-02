@@ -3,15 +3,9 @@
   "schemaVersion": 1,
   "id": "ps-standard",
   "label": "PlayStation Controller - Browser Standard Mapping",
-  "description": "Baseline mapping for PS controllers that expose the browser Gamepad API standard layout.",
+  "description": "Baseline mapping for controllers that expose the browser Gamepad API standard layout.",
   "match": {
-    "mapping": "standard",
-    "idIncludesAny": [
-      "Wireless Controller",
-      "DualShock",
-      "DualSense",
-      "PlayStation"
-    ]
+    "mapping": "standard"
   },
   "output": {
     "messageType": "sensor_msgs/msg/Joy",
