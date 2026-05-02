@@ -23,7 +23,7 @@
         "x": 363,
         "y": 242,
         "rot": 0,
-        "button": 2,
+        "button": 3,
         "buttonName": "square"
     },
     {
@@ -32,7 +32,7 @@
         "x": 397,
         "y": 210,
         "rot": 0,
-        "button": 3,
+        "button": 4,
         "buttonName": "triangle"
     },
     {
@@ -41,7 +41,7 @@
         "x": 121,
         "y": 131,
         "rot": 0,
-        "button": 4,
+        "button": 6,
         "buttonName": "l1"
     },
     {
@@ -50,7 +50,7 @@
         "x": 393,
         "y": 131,
         "rot": 0,
-        "button": 5,
+        "button": 7,
         "buttonName": "r1"
     },
     {
@@ -59,7 +59,7 @@
         "x": 121,
         "y": 97,
         "rot": 0,
-        "button": 6,
+        "button": 8,
         "buttonName": "l2"
     },
     {
@@ -68,7 +68,7 @@
         "x": 393,
         "y": 97,
         "rot": 0,
-        "button": 7,
+        "button": 9,
         "buttonName": "r2"
     },
     {
@@ -77,7 +77,7 @@
         "x": 211,
         "y": 242,
         "rot": 0,
-        "button": 8,
+        "button": 10,
         "buttonName": "share_or_create"
     },
     {
@@ -86,7 +86,7 @@
         "x": 302,
         "y": 242,
         "rot": 0,
-        "button": 9,
+        "button": 11,
         "buttonName": "options"
     },
     {
@@ -109,7 +109,7 @@
         "type": "stick",
         "axisX": 0,
         "axisY": 1,
-        "button": 10,
+        "button": 13,
         "axisXName": "left_stick_x",
         "axisYName": "left_stick_y",
         "buttonName": "l3",
@@ -120,7 +120,7 @@
         "type": "stick",
         "axisX": 2,
         "axisY": 3,
-        "button": 11,
+        "button": 14,
         "axisXName": "right_stick_x",
         "axisYName": "right_stick_y",
         "buttonName": "r3",

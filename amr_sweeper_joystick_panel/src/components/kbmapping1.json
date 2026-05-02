@@ -12,19 +12,19 @@
         "direction": null
     },
     "j": {
-        "button": 2,
-        "toggle": false,
-        "axis": -1,
-        "direction": null
-    },
-    "i": {
         "button": 3,
         "toggle": false,
         "axis": -1,
         "direction": null
     },
-    " ": {
+    "i": {
         "button": 4,
+        "toggle": false,
+        "axis": -1,
+        "direction": null
+    },
+    " ": {
+        "button": 6,
         "toggle": false,
         "axis": -1,
         "direction": null

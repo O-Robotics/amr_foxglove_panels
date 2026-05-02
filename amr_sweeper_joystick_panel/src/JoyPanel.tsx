@@ -7,7 +7,7 @@ import {
   SettingsTreeAction,
 } from "@foxglove/studio";
 import { FormGroup, FormControlLabel, Switch } from "@mui/material";
-import { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 
 // import { GamepadDebug } from "./components/GamepadDebug";
@@ -20,7 +20,7 @@ import {
   joyFromGamepad,
 } from "./controller-mappings/applyControllerMapping";
 import { useGamepad } from "./hooks/useGamepad";
-import { Config } from "./panelSettings";
+import { Config, buildSettingsTree, settingsActionReducer } from "./panelSettings";
 import { Joy } from "./types";
 
 type KbMap = {
@@ -144,9 +144,12 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.pubJoyTopic ??= "/joy";
     partialConfig.publishMode ??= false;
     partialConfig.publishFrameId ??= "";
-    partialConfig.dataSource = "gamepad";
+    partialConfig.dataSource ??= "gamepad";
     partialConfig.controllerMappingId ??= defaultControllerMappingId;
-    partialConfig.gamepadId ??= -1;
+    partialConfig.gamepadId ??= 0;
+    if (partialConfig.dataSource === "sub-joy-topic") {
+      partialConfig.publishMode = false;
+    }
     return partialConfig as Config;
   });
 
@@ -163,31 +166,36 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     return newKeys;
   }, [trackedKeys]);
 
+  const settingsActionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      setConfig((prevConfig) => settingsActionReducer(prevConfig, action));
+    },
+    [setConfig],
+  );
+
   const refreshConnectedGamepads = useCallback(() => {
     setGamepadIds(getConnectedGamepadIds());
   }, []);
 
-  const noopSettingsActionHandler = useCallback((_action: SettingsTreeAction) => {
-    return;
-  }, []);
-
   const activeGamepadId = useMemo(() => {
-    if (gamepadIds.length === 0) {
+    if (config.dataSource !== "gamepad" || gamepadIds.length === 0) {
       return undefined;
     }
-    if (config.gamepadId >= 0 && gamepadIds.includes(config.gamepadId)) {
+
+    if (gamepadIds.includes(config.gamepadId)) {
       return config.gamepadId;
     }
-    return gamepadIds[0];
-  }, [config.gamepadId, gamepadIds]);
 
-  // Hide the settings editor for the fixed PS-controller panel
+    return gamepadIds[0];
+  }, [config.dataSource, config.gamepadId, gamepadIds]);
+
+  // Register the settings tree
   useEffect(() => {
     context.updatePanelSettingsEditor({
-      actionHandler: noopSettingsActionHandler,
-      nodes: {},
+      actionHandler: settingsActionHandler,
+      nodes: buildSettingsTree(config, topics, gamepadIds),
     });
-  }, [context, noopSettingsActionHandler]);
+  }, [config, context, gamepadIds, settingsActionHandler, topics]);
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {
@@ -269,11 +277,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
 
     didUpdate: useCallback(
       (gp: Gamepad) => {
-        if (activeGamepadId == undefined) {
-          return;
-        }
-
-        if (activeGamepadId !== gp.index) {
+        if (activeGamepadId == undefined || activeGamepadId !== gp.index) {
           return;
         }
 
@@ -289,7 +293,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
       },
       [activeGamepadId, config.controllerMappingId, config.publishFrameId],
     ),
-    enabled: true,
+    enabled: config.dataSource === "gamepad",
   });
 
   // Keyboard mode

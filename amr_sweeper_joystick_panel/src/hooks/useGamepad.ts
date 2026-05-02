@@ -12,20 +12,23 @@ export function useGamepad(
     // MDN says that valid request IDs are non-zero, so we use zero to indicate
     // that there is no pending animation request.
     const animationRequestId = useRef<number>(0);
+    const connectedGamepadIndexes = useRef<Set<number>>(new Set());
 
     const onAnimationFrame = useCallback(() => {
-        let gamepadCount = 0;
+        const nextGamepadIndexes = new Set<number>();
 
         for (const gamepad of navigator.getGamepads()) {
             if (gamepad == null) continue;
+            nextGamepadIndexes.add(gamepad.index);
+            if (!connectedGamepadIndexes.current.has(gamepad.index)) {
+                didConnect(gamepad);
+            }
             didUpdate(gamepad);
-            gamepadCount ++;
         }
 
-        // Reschedule for the next animation frame if there are any gamepads
-        animationRequestId.current = (gamepadCount === 0) ? 0 :
-            window.requestAnimationFrame(onAnimationFrame);
-    }, [didUpdate]);
+        connectedGamepadIndexes.current = nextGamepadIndexes;
+        animationRequestId.current = window.requestAnimationFrame(onAnimationFrame);
+    }, [didConnect, didUpdate]);
 
     // onAnimationFrame reschedules itself, and the reference to itself can
     // become stale as dependencies change. When this happens, cancel the old
@@ -48,6 +51,7 @@ export function useGamepad(
     }, [enabled, onAnimationFrame]);
 
     const onConnect = useCallback((event: GamepadEvent) => {
+        connectedGamepadIndexes.current.add(event.gamepad.index);
         didConnect(event.gamepad);
 
         // Schedule an animation frame if there is not already one pending
@@ -58,6 +62,7 @@ export function useGamepad(
     }, [didConnect, enabled, onAnimationFrame]);
 
     const onDisconnect = useCallback((event: GamepadEvent) => {
+        connectedGamepadIndexes.current.delete(event.gamepad.index);
         didDisconnect(event.gamepad);
     }, [didDisconnect]);
 
