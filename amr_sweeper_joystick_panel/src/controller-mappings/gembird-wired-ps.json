@@ -134,7 +134,7 @@
       "action": "left_stick_x",
       "source": {
         "type": "axis",
-        "index": 2
+        "index": 0
       },
       "target": {
         "type": "axis",
@@ -154,7 +154,7 @@
       "action": "left_stick_y",
       "source": {
         "type": "axis",
-        "index": 5
+        "index": 1
       },
       "target": {
         "type": "axis",
@@ -173,9 +173,8 @@
     {
       "action": "right_stick_x",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 3,
-        "negativeIndex": 1
+        "type": "axis",
+        "index": 2
       },
       "target": {
         "type": "axis",
@@ -194,9 +193,8 @@
     {
       "action": "right_stick_y",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 0,
-        "negativeIndex": 2
+        "type": "axis",
+        "index": 5
       },
       "target": {
         "type": "axis",
@@ -257,8 +255,9 @@
     {
       "action": "dpad_x",
       "source": {
-        "type": "axis",
-        "index": 0
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "x"
       },
       "target": {
         "type": "axis",
@@ -277,8 +276,9 @@
     {
       "action": "dpad_y",
       "source": {
-        "type": "axis",
-        "index": 1
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "y"
       },
       "target": {
         "type": "axis",
@@ -296,6 +296,54 @@
     }
   ],
   "buttonMappings": [
+    {
+      "action": "cross",
+      "source": {
+        "type": "button",
+        "index": 0,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 0
+      }
+    },
+    {
+      "action": "circle",
+      "source": {
+        "type": "button",
+        "index": 1,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 1
+      }
+    },
+    {
+      "action": "square",
+      "source": {
+        "type": "button",
+        "index": 2,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 2
+      }
+    },
+    {
+      "action": "triangle",
+      "source": {
+        "type": "button",
+        "index": 3,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 3
+      }
+    },
     {
       "action": "l1",
       "source": {

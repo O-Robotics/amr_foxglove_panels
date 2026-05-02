@@ -30,6 +30,13 @@ type KbMap = {
   value: number;
 };
 
+type RawGamepadState = {
+  id: string;
+  mapping: string;
+  axes: number[];
+  buttons: number[];
+};
+
 function keyToCode(key: string): string {
   if (key === " ") {
     return "Space";
@@ -96,6 +103,15 @@ function getActiveControllerMapping(gamepad: Gamepad, preferredMappingId: string
   return undefined;
 }
 
+function snapshotGamepad(gamepad: Gamepad): RawGamepadState {
+  return {
+    id: gamepad.id,
+    mapping: gamepad.mapping,
+    axes: Array.from(gamepad.axes),
+    buttons: gamepad.buttons.map((button) => button.value),
+  };
+}
+
 function copyJoyMessage(joy: Joy, frameId: string): Joy {
   return {
     header: joyHeader(frameId),
@@ -116,6 +132,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
   const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
   const [messages, setMessages] = useState<undefined | Immutable<MessageEvent[]>>();
   const [joy, setJoy] = useState<Joy | undefined>();
+  const [rawGamepad, setRawGamepad] = useState<RawGamepadState | undefined>();
   const advertisedTopicRef = useRef<string | undefined>();
   const [kbEnabled, setKbEnabled] = useState<boolean>(true);
   const [gamepadIds, setGamepadIds] = useState<number[]>(() => getConnectedGamepadIds());
@@ -265,6 +282,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           return;
         }
 
+        setRawGamepad(undefined);
         const controllerMapping =
           getActiveControllerMapping(gp, config.controllerMappingId) ??
           getControllerMapping(config.controllerMappingId);
@@ -281,6 +299,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           return;
         }
 
+        setRawGamepad(snapshotGamepad(gp));
         const controllerMapping = getActiveControllerMapping(gp, config.controllerMappingId);
         if (!controllerMapping) {
           setJoy((prevJoy) => neutralizeJoy(prevJoy, config.publishFrameId));
@@ -496,6 +515,17 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     };
   }, [context]);
 
+  const showRawGamepadDebug =
+    config.dataSource === "gamepad" && config.controllerMappingId === "gembird-wired-ps";
+  const activeRawAxes =
+    rawGamepad?.axes
+      .map((value, index) => ({ index, value }))
+      .filter(({ value }) => Math.abs(value) > 0.05) ?? [];
+  const activeRawButtons =
+    rawGamepad?.buttons
+      .map((value, index) => ({ index, value }))
+      .filter(({ value }) => value > 0.05) ?? [];
+
   return (
     <div
       ref={panelRootRef}
@@ -516,6 +546,24 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
         cbInteractChange={interactiveCb}
         controllerMapping={getControllerMapping(config.controllerMappingId)}
       />
+      {showRawGamepadDebug ? (
+        <div style={{ color: "#ddd", fontFamily: "monospace", fontSize: 12, padding: 8 }}>
+          <div>{rawGamepad?.id ?? "No gamepad data"}</div>
+          <div>mapping: {rawGamepad?.mapping || "(none)"}</div>
+          <div>
+            axes:{" "}
+            {activeRawAxes.length > 0
+              ? activeRawAxes.map(({ index, value }) => `${index}:${value.toFixed(2)}`).join(" ")
+              : "neutral"}
+          </div>
+          <div>
+            buttons:{" "}
+            {activeRawButtons.length > 0
+              ? activeRawButtons.map(({ index, value }) => `${index}:${value.toFixed(2)}`).join(" ")
+              : "none"}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

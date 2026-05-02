@@ -80,10 +80,37 @@ function readAxisSource(gamepad: Gamepad, source: AxisSource): number {
     return readButtonValue(gamepad, source.index);
   }
 
+  if (source.type === "hatAxis") {
+    return readHatAxis(gamepad.axes[source.index] ?? 3.29, source.direction);
+  }
+
   return (
     readButtonValue(gamepad, source.positiveIndex) -
     readButtonValue(gamepad, source.negativeIndex)
   );
+}
+
+function readHatAxis(value: number, direction: "x" | "y"): number {
+  const tolerance = 0.12;
+  const isNear = (target: number) => Math.abs(value - target) <= tolerance;
+
+  if (direction === "x") {
+    if (isNear(0.71)) {
+      return 1;
+    }
+    if (isNear(-0.43)) {
+      return -1;
+    }
+    return 0;
+  }
+
+  if (isNear(-1)) {
+    return 1;
+  }
+  if (isNear(0.14)) {
+    return -1;
+  }
+  return 0;
 }
 
 function readButtonValue(gamepad: Gamepad, index: number): number {

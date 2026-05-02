@@ -42,6 +42,11 @@ export type AxisSource =
       type: "buttonPair";
       positiveIndex: number;
       negativeIndex: number;
+    }
+  | {
+      type: "hatAxis";
+      index: number;
+      direction: "x" | "y";
     };
 
 export type AxisTransform = {
