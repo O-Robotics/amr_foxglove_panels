@@ -25,6 +25,11 @@ export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAc
 
       if (configPath[0] === "gamepadId" && typeof value === "string") {
         _.set(draft, configPath, Number(value));
+      } else if (configPath[0] === "dataSource" && value === "sub-joy-topic") {
+        _.set(draft, configPath, value);
+        draft.publishMode = false;
+      } else if (configPath[0] === "publishMode" && draft.dataSource === "sub-joy-topic") {
+        draft.publishMode = false;
       } else {
         _.set(draft, configPath, value);
       }

@@ -76,6 +76,7 @@ function generateButton(
   radius: number,
   downCb: (e: React.PointerEvent) => void,
   upCb: (e: React.PointerEvent) => void,
+  cancelCb: (e: React.PointerEvent) => void,
 ) {
   return (
     <>
@@ -88,6 +89,8 @@ function generateButton(
         strokeWidth={2}
         onPointerDown={downCb}
         onPointerUp={upCb}
+        onPointerCancel={cancelCb}
+        onLostPointerCapture={cancelCb}
       />
       <text
         textAnchor="middle"
@@ -144,6 +147,7 @@ function generateStick(
   downCb: (e: React.PointerEvent) => void,
   moveCb: (e: React.PointerEvent) => void,
   upCb: (e: React.PointerEvent) => void,
+  cancelCb: (e: React.PointerEvent) => void,
 ) {
   const offX = -valueX * radius;
   const offY = -valueY * radius;
@@ -160,6 +164,8 @@ function generateStick(
         onPointerDown={downCb}
         onPointerMove={moveCb}
         onPointerUp={upCb}
+        onPointerCancel={cancelCb}
+        onLostPointerCapture={cancelCb}
       />
       <circle
         cx={x + offX}
@@ -323,8 +329,8 @@ export function GamepadView(props: {
       case PointerEventType.Down: {
         // Add it to the list of tracked interactions
         e.currentTarget.setPointerCapture(e.pointerId);
-        setInteractions([
-          ...interactions,
+        setInteractions((prevInteractions) => [
+          ...prevInteractions.filter((i) => i.pointerId !== e.pointerId),
           {
             pointerId: e.pointerId,
             buttonIdx: idx,
@@ -343,7 +349,9 @@ export function GamepadView(props: {
       }
       case PointerEventType.Up: {
         // Remove from the list
-        setInteractions(interactions.filter((i) => i.pointerId !== e.pointerId));
+        setInteractions((prevInteractions) =>
+          prevInteractions.filter((i) => i.pointerId !== e.pointerId),
+        );
         break;
       }
     }
@@ -367,8 +375,8 @@ export function GamepadView(props: {
       case PointerEventType.Down: {
         // Add it to the list of tracked interactions
         e.currentTarget.setPointerCapture(e.pointerId);
-        setInteractions([
-          ...interactions,
+        setInteractions((prevInteractions) => [
+          ...prevInteractions.filter((i) => i.pointerId !== e.pointerId),
           {
             pointerId: e.pointerId,
             buttonIdx: -1,
@@ -382,27 +390,30 @@ export function GamepadView(props: {
         break;
       }
       case PointerEventType.Move: {
-        const updatedInteractions = interactions.map((v) => {
-          if (v.pointerId === e.pointerId) {
-            return {
-              pointerId: e.pointerId,
-              buttonIdx: -1,
-              buttonVal: -1,
-              axis1Idx: idxX,
-              axis1Val: xa,
-              axis2Idx: idxY,
-              axis2Val: ya,
-            };
-          } else {
-            return v;
-          }
-        });
-        setInteractions(updatedInteractions);
+        setInteractions((prevInteractions) =>
+          prevInteractions.map((v) => {
+            if (v.pointerId === e.pointerId) {
+              return {
+                pointerId: e.pointerId,
+                buttonIdx: -1,
+                buttonVal: -1,
+                axis1Idx: idxX,
+                axis1Val: xa,
+                axis2Idx: idxY,
+                axis2Val: ya,
+              };
+            } else {
+              return v;
+            }
+          }),
+        );
         break;
       }
       case PointerEventType.Up: {
         // Remove from the list
-        setInteractions(interactions.filter((i) => i.pointerId !== e.pointerId));
+        setInteractions((prevInteractions) =>
+          prevInteractions.filter((i) => i.pointerId !== e.pointerId),
+        );
         break;
       }
     }
@@ -427,6 +438,9 @@ export function GamepadView(props: {
           radius,
           (e) => {
             buttonCb(index, e, PointerEventType.Down);
+          },
+          (e) => {
+            buttonCb(index, e, PointerEventType.Up);
           },
           (e) => {
             buttonCb(index, e, PointerEventType.Up);
@@ -464,6 +478,9 @@ export function GamepadView(props: {
           },
           (e) => {
             axisCb(axisX, axisY, e, PointerEventType.Move);
+          },
+          (e) => {
+            axisCb(axisX, axisY, e, PointerEventType.Up);
           },
           (e) => {
             axisCb(axisX, axisY, e, PointerEventType.Up);

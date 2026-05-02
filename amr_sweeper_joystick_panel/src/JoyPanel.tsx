@@ -15,7 +15,7 @@ import { GamepadView } from "./components/GamepadView";
 import { SimpleButtonView } from "./components/SimpleButtonView";
 import kbmapping1 from "./components/kbmapping1.json";
 import { defaultControllerMappingId, getControllerMapping } from "./controller-mappings";
-import { joyFromGamepad } from "./controller-mappings/applyControllerMapping";
+import { createNeutralJoy, joyFromGamepad } from "./controller-mappings/applyControllerMapping";
 import { useGamepad } from "./hooks/useGamepad";
 import { Config, buildSettingsTree, settingsActionReducer } from "./panelSettings";
 import { Joy } from "./types";
@@ -26,6 +26,34 @@ type KbMap = {
   direction: number;
   value: number;
 };
+
+function joyFromKeyboardMap(trackedKeys: Map<string, KbMap>, frameId: string): Joy {
+  const axes: number[] = [];
+  const buttons: number[] = [];
+
+  trackedKeys.forEach((value) => {
+    if (value.button >= 0) {
+      while (buttons.length <= value.button) {
+        buttons.push(0);
+      }
+      buttons[value.button] = value.value;
+    } else if (value.axis >= 0) {
+      while (axes.length <= value.axis) {
+        axes.push(0);
+      }
+      axes[value.axis] += (value.direction > 0 ? 1 : -1) * value.value;
+    }
+  });
+
+  return {
+    header: {
+      frame_id: frameId,
+      stamp: fromDate(new Date()), // TODO: /clock
+    },
+    axes,
+    buttons,
+  };
+}
 
 function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element {
   const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
@@ -62,6 +90,9 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.layoutName ??= "steamdeck";
     partialConfig.controllerMappingId ??= defaultControllerMappingId;
     partialConfig.gamepadId ??= 0;
+    if (partialConfig.dataSource === "sub-joy-topic") {
+      partialConfig.publishMode = false;
+    }
     return partialConfig as Config;
   });
 
@@ -147,10 +178,25 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
       console.log("Gamepad " + gp.index + " connected!");
     }, []),
 
-    didDisconnect: useCallback((gp: Gamepad) => {
-      // TODO update the gamepad ID list
-      console.log("Gamepad " + gp.index + " discconnected!");
-    }, []),
+    didDisconnect: useCallback(
+      (gp: Gamepad) => {
+        // TODO update the gamepad ID list
+        console.log("Gamepad " + gp.index + " discconnected!");
+
+        if (config.dataSource !== "gamepad" || config.gamepadId !== gp.index) {
+          return;
+        }
+
+        const controllerMapping = getControllerMapping(config.controllerMappingId);
+        setJoy(
+          createNeutralJoy(controllerMapping, {
+            frame_id: config.publishFrameId,
+            stamp: fromDate(new Date()), // TODO: /clock
+          }),
+        );
+      },
+      [config.controllerMappingId, config.dataSource, config.gamepadId, config.publishFrameId],
+    ),
 
     didUpdate: useCallback(
       (gp: Gamepad) => {
@@ -182,7 +228,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
         const newKeys = new Map(oldTrackedKeys);
         const k = newKeys.get(event.key);
         if (k) {
-          k.value = 1;
+          newKeys.set(event.key, { ...k, value: 1 });
         }
         return newKeys;
       }
@@ -196,7 +242,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
         const newKeys = new Map(oldTrackedKeys);
         const k = newKeys.get(event.key);
         if (k) {
-          k.value = 0;
+          newKeys.set(event.key, { ...k, value: 0 });
         }
         return newKeys;
       }
@@ -229,65 +275,41 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
       return;
     }
 
-    const axes: number[] = [];
-    const buttons: number[] = [];
-
-    trackedKeys?.forEach((value) => {
-      if (value.button >= 0) {
-        while (buttons.length <= value.button) {
-          buttons.push(0);
-        }
-        buttons[value.button] = value.value;
-      } else if (value.axis >= 0) {
-        while (axes.length <= value.axis) {
-          axes.push(0);
-        }
-        axes[value.axis] += (value.direction > 0 ? 1 : -1) * value.value;
-      }
-    });
-
-    const tmpJoy = {
-      header: {
-        frame_id: config.publishFrameId,
-        stamp: fromDate(new Date()), // TODO: /clock
-      },
-      axes,
-      buttons,
-    } as Joy;
-
-    setJoy(tmpJoy);
+    if (trackedKeys) {
+      setJoy(joyFromKeyboardMap(trackedKeys, config.publishFrameId));
+    }
   }, [config.dataSource, trackedKeys, config.publishFrameId, kbEnabled]);
 
   // Advertise the topic to publish
   useEffect(() => {
-    if (config.publishMode) {
-      setPubTopic((oldTopic) => {
-        if (config.publishMode) {
-          if (oldTopic) {
-            context.unadvertise?.(oldTopic);
-          }
-          context.advertise?.(config.pubJoyTopic, "sensor_msgs/Joy");
-          return config.pubJoyTopic;
-        } else {
-          if (oldTopic) {
-            context.unadvertise?.(oldTopic);
-          }
-          return "";
-        }
-      });
-    }
-  }, [config.pubJoyTopic, config.publishMode, context]);
+    const shouldPublish = config.publishMode && config.dataSource !== "sub-joy-topic";
+
+    setPubTopic((oldTopic) => {
+      if (oldTopic && (!shouldPublish || oldTopic !== config.pubJoyTopic)) {
+        context.unadvertise?.(oldTopic);
+      }
+
+      if (!shouldPublish) {
+        return undefined;
+      }
+
+      if (oldTopic !== config.pubJoyTopic) {
+        context.advertise?.(config.pubJoyTopic, "sensor_msgs/Joy");
+      }
+      return config.pubJoyTopic;
+    });
+  }, [config.dataSource, config.pubJoyTopic, config.publishMode, context]);
 
   // Publish the joy message
   useEffect(() => {
-    if (!config.publishMode) {
+    if (!config.publishMode || config.dataSource === "sub-joy-topic" || joy == undefined) {
       return;
     }
 
     if (pubTopic && pubTopic === config.pubJoyTopic) {
       context.publish?.(pubTopic, joy);
     }
-  }, [context, config.pubJoyTopic, config.publishMode, joy, pubTopic]);
+  }, [context, config.dataSource, config.pubJoyTopic, config.publishMode, joy, pubTopic]);
 
   // Invoke the done callback once the render is complete
   useEffect(() => {
@@ -295,19 +317,19 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
   }, [renderDone]);
 
   const handleKbSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setKbEnabled(event.target.checked);
+    const isEnabled = event.target.checked;
+    setKbEnabled(isEnabled);
 
-    // TODO Clear key values when disabled
-    // setTrackedKeys((oldTrackedKeys) => {
-    //   const newKeys = new Map(oldTrackedKeys);
-    //   newKeys.forEach((value, key, map) => {
-    //     const k = map.get(key);
-    //     if (k) {
-    //       k.value = 0;
-    //     }
-    //   });
-    //   return newKeys;
-    // });
+    if (!isEnabled) {
+      if (trackedKeys) {
+        const newKeys = new Map(trackedKeys);
+        newKeys.forEach((value, key) => {
+          newKeys.set(key, { ...value, value: 0 });
+        });
+        setTrackedKeys(newKeys);
+        setJoy(joyFromKeyboardMap(newKeys, config.publishFrameId));
+      }
+    }
   };
 
   const interactiveCb = useCallback(
