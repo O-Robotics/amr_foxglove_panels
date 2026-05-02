@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from "react";
 
 import { GamepadBackground } from "./GamepadBackground";
-import cheapo from "./display-mappings/cheapo.json";
-import ipega9083s from "./display-mappings/ipega-9083s.json";
-import steamdeck from "./display-mappings/steamdeck.json";
-import xboxOld from "./display-mappings/xbox-old.json";
-import xboxNew from "./display-mappings/xbox-new.json";
+import psController from "./display-mappings/ps-controller.json";
 import { Joy, ButtonConfig, BarConfig, StickConfig, DPadConfig, DisplayMapping } from "../types";
 import type { ControllerMapping, OutputSlot } from "../controller-mappings/types";
 
@@ -29,28 +25,6 @@ enum PointerEventType {
   Down,
   Move,
   Up,
-}
-
-const xboxOldDisplayMapping = applyCheapoGeometry(xboxOld as DisplayMapping);
-const xboxNewDisplayMapping = applyCheapoGeometry(xboxNew as DisplayMapping);
-
-function getDisplayMapping(layoutName: string): DisplayMapping {
-  switch (layoutName) {
-    case "ps-controller":
-      return cheapo;
-    case "steamdeck":
-      return steamdeck;
-    case "ipega-9083s":
-      return ipega9083s;
-    case "cheapo":
-      return cheapo;
-    case "xbox-old":
-      return xboxOldDisplayMapping;
-    case "xbox-new":
-      return xboxNewDisplayMapping;
-    default:
-      return [];
-  }
 }
 
 function outputSlotIndex(slots: OutputSlot[], name: string | undefined, fallback: number | undefined): number {
@@ -127,45 +101,6 @@ function getMappingDimensions(displayMapping: DisplayMapping, controllerMapping?
     numButtons: maxButton + 1,
     numAxes: maxAxis + 1,
   };
-}
-
-function applyCheapoGeometry(mapping: DisplayMapping): DisplayMapping {
-  const cheapoButtons = cheapo.filter((item) => item.type === "button") as ButtonConfig[];
-  const cheapoBars = cheapo.filter((item) => item.type === "bar") as BarConfig[];
-  const cheapoSticks = cheapo.filter((item) => item.type === "stick") as StickConfig[];
-  const cheapoDPads = cheapo.filter((item) => item.type === "d-pad") as DPadConfig[];
-
-  return mapping.map((item) => {
-    if (item.type === "button") {
-      const mapped = item as ButtonConfig;
-      const reference = cheapoButtons.find((btn) => btn.text === mapped.text);
-      return reference ? { ...mapped, x: reference.x, y: reference.y, rot: reference.rot } : mapped;
-    }
-
-    if (item.type === "bar") {
-      const mapped = item as BarConfig;
-      const reference = cheapoBars.find((bar) => bar.axis === mapped.axis);
-      return reference ? { ...mapped, x: reference.x, y: reference.y, rot: reference.rot } : mapped;
-    }
-
-    if (item.type === "stick") {
-      const mapped = item as StickConfig;
-      const reference = cheapoSticks.find(
-        (stick) => stick.axisX === mapped.axisX && stick.axisY === mapped.axisY,
-      );
-      return reference ? { ...mapped, x: reference.x, y: reference.y } : mapped;
-    }
-
-    if (item.type === "d-pad") {
-      const mapped = item as DPadConfig;
-      const reference = cheapoDPads.find(
-        (dpad) => dpad.axisX === mapped.axisX && dpad.axisY === mapped.axisY,
-      );
-      return reference ? { ...mapped, x: reference.x, y: reference.y } : mapped;
-    }
-
-    return item;
-  });
 }
 
 function generateButton(
@@ -335,12 +270,11 @@ function getDPadDirection(
 export function GamepadView(props: {
   joy: Joy | undefined;
   cbInteractChange: (joy: Joy) => void;
-  layoutName: string;
   controllerMapping?: ControllerMapping;
 }): React.ReactElement {
-  const { joy, cbInteractChange, layoutName, controllerMapping } = props;
+  const { joy, cbInteractChange, controllerMapping } = props;
   const [interactions, setInteractions] = useState<Interaction[]>([]);
-  const displayMapping = getDisplayMapping(layoutName);
+  const displayMapping = psController as DisplayMapping;
   const { numButtons, numAxes } = getMappingDimensions(displayMapping, controllerMapping);
 
   useEffect(() => {
@@ -688,7 +622,7 @@ export function GamepadView(props: {
         onTouchMove={preventPan}
         onTouchCancel={preventPan}
       >
-        <GamepadBackground layoutName={layoutName} />
+        <GamepadBackground />
         {dispItems}
       </svg>
     </div>

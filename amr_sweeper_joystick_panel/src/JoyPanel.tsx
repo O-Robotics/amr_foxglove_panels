@@ -12,7 +12,6 @@ import ReactDOM from "react-dom";
 
 // import { GamepadDebug } from "./components/GamepadDebug";
 import { GamepadView } from "./components/GamepadView";
-import { SimpleButtonView } from "./components/SimpleButtonView";
 import kbmapping1 from "./components/kbmapping1.json";
 import { defaultControllerMappingId, getControllerMapping } from "./controller-mappings";
 import {
@@ -146,9 +145,6 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.publishMode ??= false;
     partialConfig.publishFrameId ??= "";
     partialConfig.dataSource ??= "sub-joy-topic";
-    partialConfig.displayMode ??= "auto";
-    partialConfig.debugGamepad ??= false;
-    partialConfig.layoutName ??= "ps-controller";
     partialConfig.controllerMappingId ??= defaultControllerMappingId;
     partialConfig.gamepadId ??= 0;
     if (partialConfig.dataSource === "sub-joy-topic") {
@@ -507,16 +503,11 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           />
         </FormGroup>
       ) : null}
-      {config.displayMode === "auto" ? <SimpleButtonView joy={joy} /> : null}
-      {config.displayMode === "custom" ? (
-        <GamepadView
-          joy={joy}
-          cbInteractChange={interactiveCb}
-          layoutName={config.layoutName}
-          controllerMapping={getControllerMapping(config.controllerMappingId)}
-        />
-      ) : null}
-      {/* {config.debugGamepad ? <GamepadDebug gamepads={gamepads} /> : null} */}
+      <GamepadView
+        joy={joy}
+        cbInteractChange={interactiveCb}
+        controllerMapping={getControllerMapping(config.controllerMappingId)}
+      />
     </div>
   );
 }

@@ -12,9 +12,6 @@ export type Config = {
   publishMode: boolean;
   pubJoyTopic: string;
   publishFrameId: string;
-  displayMode: string;
-  debugGamepad: boolean;
-  layoutName: string;
 };
 
 function buildGamepadOptions(selectedGamepadId: number, gamepadIds: readonly number[]): { label: string; value: string }[] {
@@ -124,49 +121,6 @@ export function buildSettingsTree(
       value: config.publishFrameId,
     },
   };
-  const displayFields: SettingsTreeFields = {
-    displayMode: {
-      label: "Display Mode",
-      input: "select",
-      value: config.displayMode,
-      options: [
-        {
-          label: "Auto-Generated",
-          value: "auto",
-        },
-        {
-          label: "Custom Display",
-          value: "custom",
-        },
-      ],
-    },
-    layoutName: {
-      label: "Layout",
-      input: "select",
-      disabled: config.displayMode === "auto",
-      value: config.layoutName,
-      options: [
-        {
-          label: "PS Controller",
-          value: "ps-controller",
-        },
-        {
-          label: "Steam Deck",
-          value: "steamdeck",
-        },
-        {
-          label: "iPega PG-9083s",
-          value: "ipega-9083s",
-        },
-      ],
-    },
-
-    debugGamepad: {
-      label: "Debug Gamepad",
-      input: "boolean",
-      value: config.debugGamepad,
-    },
-  };
 
   const settings: SettingsTreeNodes = {
     dataSource: {
@@ -176,10 +130,6 @@ export function buildSettingsTree(
     publish: {
       label: "Publish",
       fields: publishFields,
-    },
-    display: {
-      label: "Display",
-      fields: displayFields,
     },
   };
 
