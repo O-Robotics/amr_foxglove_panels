@@ -147,24 +147,16 @@ export function buildSettingsTree(
       value: config.layoutName,
       options: [
         {
+          label: "PS Controller",
+          value: "ps-controller",
+        },
+        {
           label: "Steam Deck",
           value: "steamdeck",
         },
         {
           label: "iPega PG-9083s",
           value: "ipega-9083s",
-        },
-	{
-	  label: "Esperanza-wireless",
-	  value: "xbox-old",
-	},
-	{
-	  label: "Gembird-wired",
-	  value: "xbox-new",
-	},
-        {
-          label: "Cheap Controller",
-          value: "cheapo",
         },
       ],
     },

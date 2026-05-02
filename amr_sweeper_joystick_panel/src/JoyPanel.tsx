@@ -148,7 +148,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     partialConfig.dataSource ??= "sub-joy-topic";
     partialConfig.displayMode ??= "auto";
     partialConfig.debugGamepad ??= false;
-    partialConfig.layoutName ??= "steamdeck";
+    partialConfig.layoutName ??= "ps-controller";
     partialConfig.controllerMappingId ??= defaultControllerMappingId;
     partialConfig.gamepadId ??= 0;
     if (partialConfig.dataSource === "sub-joy-topic") {
@@ -513,6 +513,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
           joy={joy}
           cbInteractChange={interactiveCb}
           layoutName={config.layoutName}
+          controllerMapping={getControllerMapping(config.controllerMappingId)}
         />
       ) : null}
       {/* {config.debugGamepad ? <GamepadDebug gamepads={gamepads} /> : null} */}

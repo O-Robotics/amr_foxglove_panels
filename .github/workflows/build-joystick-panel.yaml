@@ -41,15 +41,23 @@ jobs:
       - name: Build Foxglove panel
         run: npm run build
 
+      - name: Create temporary changelog for packaging
+        run: |
+          cat <<'EOF' > CHANGELOG.md
+          # Changelog
+
+          Temporary changelog generated in CI so foxglove-extension package can build a .foxe archive.
+          EOF
+
       - name: Package Foxglove panel
-        run: npm run package
+        run: npm run foxglove:package
 
       - name: List packaged files
-        run: find . -name "*.foxe" -print
+        run: find . -maxdepth 1 -name "*.foxe" -print
 
       - name: Upload .foxe artifact
         uses: actions/upload-artifact@v4
         with:
           name: amr-sweeper-joystick-panel
-          path: amr_sweeper_joystick_panel/build/*.foxe
+          path: amr_sweeper_joystick_panel/*.foxe
           if-no-files-found: error

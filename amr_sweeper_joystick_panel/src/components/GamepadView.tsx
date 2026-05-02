@@ -8,6 +8,7 @@ import steamdeck from "./display-mappings/steamdeck.json";
 import xboxOld from "./display-mappings/xbox-old.json";
 import xboxNew from "./display-mappings/xbox-new.json";
 import { Joy, ButtonConfig, BarConfig, StickConfig, DPadConfig, DisplayMapping } from "../types";
+import type { ControllerMapping, OutputSlot } from "../controller-mappings/types";
 
 const colStroke = "#ddd";
 const colPrim = "blue";
@@ -35,31 +36,90 @@ const xboxNewDisplayMapping = applyCheapoGeometry(xboxNew as DisplayMapping);
 
 function getDisplayMapping(layoutName: string): DisplayMapping {
   switch (layoutName) {
+    case "ps-controller":
+      return cheapo;
     case "steamdeck":
       return steamdeck;
     case "ipega-9083s":
       return ipega9083s;
+    case "cheapo":
+      return cheapo;
     case "xbox-old":
       return xboxOldDisplayMapping;
     case "xbox-new":
       return xboxNewDisplayMapping;
-    case "cheapo":
-      return cheapo;
     default:
       return [];
   }
 }
 
-function getMappingDimensions(displayMapping: DisplayMapping): { numButtons: number; numAxes: number } {
+function outputSlotIndex(slots: OutputSlot[], name: string | undefined, fallback: number | undefined): number {
+  if (name != undefined) {
+    const slot = slots.find((candidate) => candidate.name === name);
+    if (slot != undefined) {
+      return slot.index;
+    }
+  }
+
+  return fallback ?? -1;
+}
+
+function labelFromOutputName(name: string | undefined, fallback: string): string {
+  switch (name) {
+    case "share_or_create":
+      return "Share";
+    case "options":
+      return "Options";
+    case "touchpad":
+      return "Touch";
+    case "cross":
+      return "Cross";
+    case "circle":
+      return "Circle";
+    case "square":
+      return "Square";
+    case "triangle":
+      return "Triangle";
+    default:
+      return name ?? fallback;
+  }
+}
+
+function getMappingDimensions(displayMapping: DisplayMapping, controllerMapping?: ControllerMapping): { numButtons: number; numAxes: number } {
   let maxButton = -1;
   let maxAxis = -1;
 
   for (const item of displayMapping) {
     if (item.type === "button") {
-      maxButton = Math.max(maxButton, (item as ButtonConfig).button);
+      const mapping = item as ButtonConfig;
+      maxButton = Math.max(
+        maxButton,
+        outputSlotIndex(controllerMapping?.output.buttons ?? [], mapping.buttonName, mapping.button),
+      );
     } else if (item.type === "stick") {
       const mapping = item as StickConfig;
-      maxAxis = Math.max(maxAxis, mapping.axisX, mapping.axisY);
+      maxAxis = Math.max(
+        maxAxis,
+        outputSlotIndex(controllerMapping?.output.axes ?? [], mapping.axisXName, mapping.axisX),
+        outputSlotIndex(controllerMapping?.output.axes ?? [], mapping.axisYName, mapping.axisY),
+      );
+      maxButton = Math.max(
+        maxButton,
+        outputSlotIndex(controllerMapping?.output.buttons ?? [], mapping.buttonName, mapping.button),
+      );
+    } else if (item.type === "bar") {
+      const mapping = item as BarConfig;
+      maxAxis = Math.max(
+        maxAxis,
+        outputSlotIndex(controllerMapping?.output.axes ?? [], mapping.axisName, mapping.axis),
+      );
+    } else if (item.type === "d-pad") {
+      const mapping = item as DPadConfig;
+      maxAxis = Math.max(
+        maxAxis,
+        outputSlotIndex(controllerMapping?.output.axes ?? [], mapping.axisXName, mapping.axisX),
+        outputSlotIndex(controllerMapping?.output.axes ?? [], mapping.axisYName, mapping.axisY),
+      );
     }
   }
 
@@ -276,11 +336,12 @@ export function GamepadView(props: {
   joy: Joy | undefined;
   cbInteractChange: (joy: Joy) => void;
   layoutName: string;
+  controllerMapping?: ControllerMapping;
 }): React.ReactElement {
-  const { joy, cbInteractChange, layoutName } = props;
+  const { joy, cbInteractChange, layoutName, controllerMapping } = props;
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const displayMapping = getDisplayMapping(layoutName);
-  const { numButtons, numAxes } = getMappingDimensions(displayMapping);
+  const { numButtons, numAxes } = getMappingDimensions(displayMapping, controllerMapping);
 
   useEffect(() => {
     const tmpJoy = {
@@ -464,23 +525,37 @@ export function GamepadView(props: {
   const dispItems = displayMapping.map((mappingA, index) => {
     if (mappingA.type === "button") {
       const mapping = mappingA as ButtonConfig;
-      const buttonIdx = mapping.button;
+      const buttonIdx = outputSlotIndex(
+        controllerMapping?.output.buttons ?? [],
+        mapping.buttonName,
+        mapping.button,
+      );
+      const buttonLabel = labelFromOutputName(
+        controllerMapping?.output.buttons.find((slot) => slot.index === buttonIdx)?.name ?? mapping.buttonName,
+        mapping.text,
+      );
       return (
         <g key={`button-${index}-${buttonIdx}`}>
           {generateButton(
-            joy?.buttons[buttonIdx] ?? 0,
+            buttonIdx >= 0 ? (joy?.buttons[buttonIdx] ?? 0) : 0,
             mapping.x,
             mapping.y,
-            mapping.text,
+            buttonLabel,
             18,
             (e: ReactPointerEvent) => {
-              buttonCb(buttonIdx, e, PointerEventType.Down);
+              if (buttonIdx >= 0) {
+                buttonCb(buttonIdx, e, PointerEventType.Down);
+              }
             },
             (e: ReactPointerEvent) => {
-              buttonCb(buttonIdx, e, PointerEventType.Up);
+              if (buttonIdx >= 0) {
+                buttonCb(buttonIdx, e, PointerEventType.Up);
+              }
             },
             (e: ReactPointerEvent) => {
-              buttonCb(buttonIdx, e, PointerEventType.Up);
+              if (buttonIdx >= 0) {
+                buttonCb(buttonIdx, e, PointerEventType.Up);
+              }
             },
           )}
         </g>
@@ -489,35 +564,63 @@ export function GamepadView(props: {
 
     if (mappingA.type === "bar") {
       const mapping = mappingA as BarConfig;
+      const axisIdx = outputSlotIndex(
+        controllerMapping?.output.axes ?? [],
+        mapping.axisName,
+        mapping.axis,
+      );
       return (
-        <g key={`bar-${index}-${mapping.axis}`}>
-          {generateBar(joy?.axes[mapping.axis] ?? 0, mapping.x, mapping.y, mapping.rot)}
+        <g key={`bar-${index}-${axisIdx}`}>
+          {generateBar(axisIdx >= 0 ? (joy?.axes[axisIdx] ?? 0) : 0, mapping.x, mapping.y, mapping.rot)}
         </g>
       );
     }
 
     if (mappingA.type === "stick") {
       const mapping = mappingA as StickConfig;
+      const axisXIdx = outputSlotIndex(
+        controllerMapping?.output.axes ?? [],
+        mapping.axisXName,
+        mapping.axisX,
+      );
+      const axisYIdx = outputSlotIndex(
+        controllerMapping?.output.axes ?? [],
+        mapping.axisYName,
+        mapping.axisY,
+      );
+      const buttonIdx = outputSlotIndex(
+        controllerMapping?.output.buttons ?? [],
+        mapping.buttonName,
+        mapping.button,
+      );
       return (
-        <g key={`stick-${index}-${mapping.axisX}-${mapping.axisY}`}>
+        <g key={`stick-${index}-${axisXIdx}-${axisYIdx}`}>
           {generateStick(
-            joy?.axes[mapping.axisX] ?? 0,
-            joy?.axes[mapping.axisY] ?? 0,
-            joy?.buttons[mapping.button] ?? 0,
+            axisXIdx >= 0 ? (joy?.axes[axisXIdx] ?? 0) : 0,
+            axisYIdx >= 0 ? (joy?.axes[axisYIdx] ?? 0) : 0,
+            buttonIdx >= 0 ? (joy?.buttons[buttonIdx] ?? 0) : 0,
             mapping.x,
             mapping.y,
             30,
             (e: ReactPointerEvent) => {
-              axisCb(mapping.axisX, mapping.axisY, e, PointerEventType.Down);
+              if (axisXIdx >= 0 && axisYIdx >= 0) {
+                axisCb(axisXIdx, axisYIdx, e, PointerEventType.Down);
+              }
             },
             (e: ReactPointerEvent) => {
-              axisCb(mapping.axisX, mapping.axisY, e, PointerEventType.Move);
+              if (axisXIdx >= 0 && axisYIdx >= 0) {
+                axisCb(axisXIdx, axisYIdx, e, PointerEventType.Move);
+              }
             },
             (e: ReactPointerEvent) => {
-              axisCb(mapping.axisX, mapping.axisY, e, PointerEventType.Up);
+              if (axisXIdx >= 0 && axisYIdx >= 0) {
+                axisCb(axisXIdx, axisYIdx, e, PointerEventType.Up);
+              }
             },
             (e: ReactPointerEvent) => {
-              axisCb(mapping.axisX, mapping.axisY, e, PointerEventType.Up);
+              if (axisXIdx >= 0 && axisYIdx >= 0) {
+                axisCb(axisXIdx, axisYIdx, e, PointerEventType.Up);
+              }
             },
           )}
         </g>
@@ -525,26 +628,52 @@ export function GamepadView(props: {
     }
 
     const mapping = mappingA as DPadConfig;
+    const axisXIdx = outputSlotIndex(
+      controllerMapping?.output.axes ?? [],
+      mapping.axisXName,
+      mapping.axisX,
+    );
+    const axisYIdx = outputSlotIndex(
+      controllerMapping?.output.axes ?? [],
+      mapping.axisYName,
+      mapping.axisY,
+    );
     return (
       <g
-        key={`dpad-${index}-${mapping.axisX}-${mapping.axisY}`}
+        key={`dpad-${index}-${axisXIdx}-${axisYIdx}`}
         onPointerDown={(e: ReactPointerEvent) => {
-          dPadCb(mapping.axisX, mapping.axisY, e, PointerEventType.Down);
+          if (axisXIdx >= 0 && axisYIdx >= 0) {
+            dPadCb(axisXIdx, axisYIdx, e, PointerEventType.Down);
+          }
         }}
         onPointerMove={(e: ReactPointerEvent) => {
-          dPadCb(mapping.axisX, mapping.axisY, e, PointerEventType.Move);
+          if (axisXIdx >= 0 && axisYIdx >= 0) {
+            dPadCb(axisXIdx, axisYIdx, e, PointerEventType.Move);
+          }
         }}
         onPointerUp={(e: ReactPointerEvent) => {
-          dPadCb(mapping.axisX, mapping.axisY, e, PointerEventType.Up);
+          if (axisXIdx >= 0 && axisYIdx >= 0) {
+            dPadCb(axisXIdx, axisYIdx, e, PointerEventType.Up);
+          }
         }}
         onPointerCancel={(e: ReactPointerEvent) => {
-          dPadCb(mapping.axisX, mapping.axisY, e, PointerEventType.Up);
+          if (axisXIdx >= 0 && axisYIdx >= 0) {
+            dPadCb(axisXIdx, axisYIdx, e, PointerEventType.Up);
+          }
         }}
         onLostPointerCapture={(e: ReactPointerEvent) => {
-          dPadCb(mapping.axisX, mapping.axisY, e, PointerEventType.Up);
+          if (axisXIdx >= 0 && axisYIdx >= 0) {
+            dPadCb(axisXIdx, axisYIdx, e, PointerEventType.Up);
+          }
         }}
       >
-        {generateDPad(joy?.axes[mapping.axisX] ?? 0, joy?.axes[mapping.axisY] ?? 0, mapping.x, mapping.y, 30)}
+        {generateDPad(
+          axisXIdx >= 0 ? (joy?.axes[axisXIdx] ?? 0) : 0,
+          axisYIdx >= 0 ? (joy?.axes[axisYIdx] ?? 0) : 0,
+          mapping.x,
+          mapping.y,
+          30,
+        )}
       </g>
     );
   });

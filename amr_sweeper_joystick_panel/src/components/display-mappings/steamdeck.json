@@ -5,7 +5,8 @@
         "x": 445,
         "y": 184,
         "rot": 0,
-        "button": 0
+        "button": 0,
+        "buttonName": "cross"
     },
     {
         "type": "button",
@@ -13,7 +14,8 @@
         "x": 472,
         "y": 157,
         "rot": 0,
-        "button": 1
+        "button": 1,
+        "buttonName": "circle"
     },
     {
         "type": "button",
@@ -21,7 +23,8 @@
         "x": 417,
         "y": 157,
         "rot": 0,
-        "button": 2
+        "button": 2,
+        "buttonName": "square"
     },
     {
         "type": "button",
@@ -29,7 +32,8 @@
         "x": 445,
         "y": 131,
         "rot": 0,
-        "button": 3
+        "button": 3,
+        "buttonName": "triangle"
     },
     {
         "type": "button",
@@ -37,7 +41,8 @@
         "x": 72,
         "y": 100,
         "rot": 0,
-        "button": 4
+        "button": 4,
+        "buttonName": "l1"
     },
     {
         "type": "button",
@@ -45,7 +50,8 @@
         "x": 440,
         "y": 100,
         "rot": 0,
-        "button": 5
+        "button": 5,
+        "buttonName": "r1"
     },
     {
         "type": "button",
@@ -53,7 +59,8 @@
         "x": 72,
         "y": 70,
         "rot": 0,
-        "button": 6
+        "button": 6,
+        "buttonName": "l2"
     },
     {
         "type": "button",
@@ -61,7 +68,8 @@
         "x": 440,
         "y": 70,
         "rot": 0,
-        "button": 7
+        "button": 7,
+        "buttonName": "r2"
     },
     {
         "type": "button",
@@ -101,7 +109,8 @@
         "x": 112,
         "y": 128,
         "rot": 0,
-        "button": 8
+        "button": 8,
+        "buttonName": "share_or_create"
     },
     {
         "type": "button",
@@ -109,27 +118,33 @@
         "x": 400,
         "y": 128,
         "rot": 0,
-        "button": 9
+        "button": 9,
+        "buttonName": "options"
     },
     {
         "type": "bar",
         "axis": 4,
         "x": 440,
         "y": 50,
-        "rot": 0
+        "rot": 0,
+        "axisName": "r2"
     },
     {
         "type": "bar",
         "axis": 5,
         "x": 72,
         "y": 50,
-        "rot": 0
+        "rot": 0,
+        "axisName": "l2"
     },
     {
         "type": "stick",
         "axisX": 0,
         "axisY": 1,
         "button": 10,
+        "axisXName": "left_stick_x",
+        "axisYName": "left_stick_y",
+        "buttonName": "l3",
         "x": 151,
         "y": 200
     },
@@ -138,6 +153,9 @@
         "axisX": 2,
         "axisY": 3,
         "button": 11,
+        "axisXName": "right_stick_x",
+        "axisYName": "right_stick_y",
+        "buttonName": "r3",
         "x": 361,
         "y": 200
     },
@@ -145,6 +163,8 @@
         "type": "d-pad",
         "axisX": 6,
         "axisY": 7,
+        "axisXName": "dpad_x",
+        "axisYName": "dpad_y",
         "x": 67,
         "y": 157
     }

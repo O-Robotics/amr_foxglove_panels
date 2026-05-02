@@ -19,7 +19,8 @@ export interface ButtonConfig {
   x: number;
   y: number;
   rot: number;
-  button: number;
+  button?: number;
+  buttonName?: string;
 }
 
 export interface BarConfig {
@@ -27,24 +28,30 @@ export interface BarConfig {
   x: number;
   y: number;
   rot: number;
-  axis: number;
+  axis?: number;
+  axisName?: string;
 }
 
 export interface StickConfig {
   type: string;
   x: number;
   y: number;
-  axisX: number;
-  axisY: number;
-  button: number;
+  axisX?: number;
+  axisY?: number;
+  axisXName?: string;
+  axisYName?: string;
+  button?: number;
+  buttonName?: string;
 }
 
 export interface DPadConfig {
   type: string;
   x: number;
   y: number;
-  axisX: number;
-  axisY: number;
+  axisX?: number;
+  axisY?: number;
+  axisXName?: string;
+  axisYName?: string;
 }
 
 export type DisplayMapping = (ButtonConfig | BarConfig | StickConfig | DPadConfig)[];
