@@ -141,7 +141,7 @@
         "index": 0
       },
       "transform": {
-        "scale": -1,
+        "scale": 1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
@@ -194,7 +194,7 @@
       "action": "right_stick_y",
       "source": {
         "type": "axis",
-        "index": 3
+        "index": 5
       },
       "target": {
         "type": "axis",
@@ -255,9 +255,9 @@
     {
       "action": "dpad_x",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 14,
-        "negativeIndex": 15
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "x"
       },
       "target": {
         "type": "axis",
@@ -275,9 +275,9 @@
     {
       "action": "dpad_y",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 12,
-        "negativeIndex": 13
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "y"
       },
       "target": {
         "type": "axis",

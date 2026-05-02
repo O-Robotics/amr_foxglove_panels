@@ -91,26 +91,26 @@ function readAxisSource(gamepad: Gamepad, source: AxisSource): number {
 }
 
 function readHatAxis(value: number, direction: "x" | "y"): number {
-  const tolerance = 0.12;
-  const isNear = (target: number) => Math.abs(value - target) <= tolerance;
+  const directions = [
+    { value: -1, x: 0, y: 1 },
+    { value: -0.71, x: -1, y: 1 },
+    { value: -0.43, x: -1, y: 0 },
+    { value: -0.14, x: -1, y: -1 },
+    { value: 0.14, x: 0, y: -1 },
+    { value: 0.43, x: 1, y: -1 },
+    { value: 0.71, x: 1, y: 0 },
+    { value: 1, x: 1, y: 1 },
+  ];
 
-  if (direction === "x") {
-    if (isNear(0.71)) {
-      return 1;
-    }
-    if (isNear(-0.43)) {
-      return -1;
-    }
+  if (value > 2) {
     return 0;
   }
 
-  if (isNear(-1)) {
-    return 1;
-  }
-  if (isNear(0.14)) {
-    return -1;
-  }
-  return 0;
+  const nearest = directions.reduce((closest, candidate) =>
+    Math.abs(candidate.value - value) < Math.abs(closest.value - value) ? candidate : closest,
+  );
+
+  return direction === "x" ? nearest.x : nearest.y;
 }
 
 function readButtonValue(gamepad: Gamepad, index: number): number {

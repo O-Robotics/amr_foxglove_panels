@@ -181,7 +181,7 @@
         "index": 2
       },
       "transform": {
-        "scale": 1,
+        "scale": -1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
@@ -201,7 +201,7 @@
         "index": 3
       },
       "transform": {
-        "scale": 1,
+        "scale": -1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
@@ -264,9 +264,8 @@
         "index": 6
       },
       "transform": {
-        "scale": -1,
+        "scale": 1,
         "offset": 0,
-        "deadzone": 0.1,
         "clamp": [
           -1,
           1
@@ -285,9 +284,8 @@
         "index": 7
       },
       "transform": {
-        "scale": -1,
+        "scale": 1,
         "offset": 0,
-        "deadzone": 0.1,
         "clamp": [
           -1,
           1
@@ -300,7 +298,7 @@
       "action": "cross",
       "source": {
         "type": "button",
-        "index": 0,
+        "index": 2,
         "threshold": 0.5
       },
       "target": {
@@ -324,7 +322,7 @@
       "action": "square",
       "source": {
         "type": "button",
-        "index": 2,
+        "index": 3,
         "threshold": 0.5
       },
       "target": {
@@ -336,7 +334,7 @@
       "action": "triangle",
       "source": {
         "type": "button",
-        "index": 3,
+        "index": 0,
         "threshold": 0.5
       },
       "target": {
