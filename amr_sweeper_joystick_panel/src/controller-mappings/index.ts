@@ -1,8 +1,10 @@
 import psStandard from "./ps-standard.json";
+import gembirdWiredPs from "./gembird-wired-ps.json";
 import type { ControllerMapping } from "./types";
 
 export const controllerMappings: ControllerMapping[] = [
   psStandard as unknown as ControllerMapping,
+  gembirdWiredPs as unknown as ControllerMapping,
 ];
 
 export const defaultControllerMappingId = "ps-standard";

@@ -1,0 +1,466 @@
+{
+  "$schema": "./controller-mapping.schema.json",
+  "schemaVersion": 1,
+  "id": "gembird-wired-ps",
+  "label": "Gembird wired PS Controller",
+  "description": "Raw PlayStation-style DirectInput mapping for the Gembird wired PS controller.",
+  "output": {
+    "messageType": "sensor_msgs/msg/Joy",
+    "axes": [
+      {
+        "index": 0,
+        "name": "left_stick_x",
+        "neutral": 0,
+        "description": "Left is positive, right is negative."
+      },
+      {
+        "index": 1,
+        "name": "left_stick_y",
+        "neutral": 0,
+        "description": "Up is positive, down is negative."
+      },
+      {
+        "index": 2,
+        "name": "right_stick_x",
+        "neutral": 0,
+        "description": "Left is positive, right is negative."
+      },
+      {
+        "index": 3,
+        "name": "right_stick_y",
+        "neutral": 0,
+        "description": "Up is positive, down is negative."
+      },
+      {
+        "index": 4,
+        "name": "l2",
+        "neutral": 0,
+        "description": "Released is 0, fully pressed is 1."
+      },
+      {
+        "index": 5,
+        "name": "r2",
+        "neutral": 0,
+        "description": "Released is 0, fully pressed is 1."
+      },
+      {
+        "index": 6,
+        "name": "dpad_x",
+        "neutral": 0,
+        "description": "Left is positive, right is negative."
+      },
+      {
+        "index": 7,
+        "name": "dpad_y",
+        "neutral": 0,
+        "description": "Up is positive, down is negative."
+      }
+    ],
+    "buttons": [
+      {
+        "index": 0,
+        "name": "cross",
+        "neutral": 0
+      },
+      {
+        "index": 1,
+        "name": "circle",
+        "neutral": 0
+      },
+      {
+        "index": 2,
+        "name": "square",
+        "neutral": 0
+      },
+      {
+        "index": 3,
+        "name": "triangle",
+        "neutral": 0
+      },
+      {
+        "index": 4,
+        "name": "l1",
+        "neutral": 0
+      },
+      {
+        "index": 5,
+        "name": "r1",
+        "neutral": 0
+      },
+      {
+        "index": 6,
+        "name": "l2",
+        "neutral": 0
+      },
+      {
+        "index": 7,
+        "name": "r2",
+        "neutral": 0
+      },
+      {
+        "index": 8,
+        "name": "share_or_create",
+        "neutral": 0
+      },
+      {
+        "index": 9,
+        "name": "options",
+        "neutral": 0
+      },
+      {
+        "index": 10,
+        "name": "l3",
+        "neutral": 0
+      },
+      {
+        "index": 11,
+        "name": "r3",
+        "neutral": 0
+      },
+      {
+        "index": 12,
+        "name": "ps",
+        "neutral": 0
+      },
+      {
+        "index": 13,
+        "name": "touchpad",
+        "neutral": 0
+      }
+    ]
+  },
+  "axisMappings": [
+    {
+      "action": "left_stick_x",
+      "source": {
+        "type": "axis",
+        "index": 0
+      },
+      "target": {
+        "type": "axis",
+        "index": 0
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.08,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "action": "left_stick_y",
+      "source": {
+        "type": "axis",
+        "index": 1
+      },
+      "target": {
+        "type": "axis",
+        "index": 1
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.08,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "action": "right_stick_x",
+      "source": {
+        "type": "axis",
+        "index": 2
+      },
+      "target": {
+        "type": "axis",
+        "index": 2
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.08,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "action": "right_stick_y",
+      "source": {
+        "type": "axis",
+        "index": 5
+      },
+      "target": {
+        "type": "axis",
+        "index": 3
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.08,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "action": "l2",
+      "source": {
+        "type": "button",
+        "index": 6,
+        "read": "value"
+      },
+      "target": {
+        "type": "axis",
+        "index": 4
+      },
+      "transform": {
+        "scale": 1,
+        "offset": 0,
+        "deadzone": 0.02,
+        "clamp": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "action": "r2",
+      "source": {
+        "type": "button",
+        "index": 7,
+        "read": "value"
+      },
+      "target": {
+        "type": "axis",
+        "index": 5
+      },
+      "transform": {
+        "scale": 1,
+        "offset": 0,
+        "deadzone": 0.02,
+        "clamp": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "action": "dpad_x",
+      "source": {
+        "type": "axis",
+        "index": 6
+      },
+      "target": {
+        "type": "axis",
+        "index": 6
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.1,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "action": "dpad_y",
+      "source": {
+        "type": "axis",
+        "index": 7
+      },
+      "target": {
+        "type": "axis",
+        "index": 7
+      },
+      "transform": {
+        "scale": -1,
+        "offset": 0,
+        "deadzone": 0.1,
+        "clamp": [
+          -1,
+          1
+        ]
+      }
+    }
+  ],
+  "buttonMappings": [
+    {
+      "action": "cross",
+      "source": {
+        "type": "button",
+        "index": 1,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 0
+      }
+    },
+    {
+      "action": "circle",
+      "source": {
+        "type": "button",
+        "index": 2,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 1
+      }
+    },
+    {
+      "action": "square",
+      "source": {
+        "type": "button",
+        "index": 0,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 2
+      }
+    },
+    {
+      "action": "triangle",
+      "source": {
+        "type": "button",
+        "index": 3,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 3
+      }
+    },
+    {
+      "action": "l1",
+      "source": {
+        "type": "button",
+        "index": 4,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 4
+      }
+    },
+    {
+      "action": "r1",
+      "source": {
+        "type": "button",
+        "index": 5,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 5
+      }
+    },
+    {
+      "action": "l2",
+      "source": {
+        "type": "button",
+        "index": 6,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 6
+      }
+    },
+    {
+      "action": "r2",
+      "source": {
+        "type": "button",
+        "index": 7,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 7
+      }
+    },
+    {
+      "action": "share_or_create",
+      "source": {
+        "type": "button",
+        "index": 8,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 8
+      }
+    },
+    {
+      "action": "options",
+      "source": {
+        "type": "button",
+        "index": 9,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 9
+      }
+    },
+    {
+      "action": "l3",
+      "source": {
+        "type": "button",
+        "index": 10,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 10
+      }
+    },
+    {
+      "action": "r3",
+      "source": {
+        "type": "button",
+        "index": 11,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 11
+      }
+    },
+    {
+      "action": "ps",
+      "source": {
+        "type": "button",
+        "index": 12,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 12
+      }
+    },
+    {
+      "action": "touchpad",
+      "source": {
+        "type": "button",
+        "index": 13,
+        "threshold": 0.5
+      },
+      "target": {
+        "type": "button",
+        "index": 13
+      }
+    }
+  ]
+}

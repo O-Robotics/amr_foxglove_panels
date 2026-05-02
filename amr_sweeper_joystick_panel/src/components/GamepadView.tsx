@@ -46,6 +46,14 @@ function labelFromOutputName(name: string | undefined, fallback: string): string
       return "Options";
     case "touchpad":
       return "Touch";
+    case "l1":
+      return "L1";
+    case "r1":
+      return "R1";
+    case "l2":
+      return "L2";
+    case "r2":
+      return "R2";
     case "cross":
       return "3";
     case "circle":
@@ -112,9 +120,25 @@ function generateButton(
   downCb: (e: React.PointerEvent) => void,
   upCb: (e: React.PointerEvent) => void,
   cancelCb: (e: React.PointerEvent) => void,
+  shape: "circle" | "rectangle" | "square" = "circle",
 ) {
-  return (
-    <>
+  const buttonShape =
+    shape === "rectangle" || shape === "square" ? (
+      <rect
+        x={x - 35}
+        y={shape === "square" ? y - 35 : y - 13}
+        width={70}
+        height={shape === "square" ? 70 : 26}
+        rx={3}
+        fill={value > 0 ? colAlt : colPrim}
+        stroke={colStroke}
+        strokeWidth={2}
+        onPointerDown={downCb}
+        onPointerUp={upCb}
+        onPointerCancel={cancelCb}
+        onLostPointerCapture={cancelCb}
+      />
+    ) : (
       <circle
         cx={x}
         cy={y}
@@ -127,6 +151,11 @@ function generateButton(
         onPointerCancel={cancelCb}
         onLostPointerCapture={cancelCb}
       />
+    );
+
+  return (
+    <>
+      {buttonShape}
       <text
         textAnchor="middle"
         x={x}
@@ -468,6 +497,12 @@ export function GamepadView(props: {
         controllerMapping?.output.buttons.find((slot) => slot.index === buttonIdx)?.name ?? mapping.buttonName,
         mapping.text,
       );
+      const isRectangleButton =
+        mapping.buttonName === "share_or_create" ||
+        mapping.buttonName === "options" ||
+        mapping.buttonName === "l1" ||
+        mapping.buttonName === "r1";
+      const isSquareButton = mapping.buttonName === "l2" || mapping.buttonName === "r2";
       return (
         <g key={`button-${index}-${buttonIdx}`}>
           {generateButton(
@@ -491,6 +526,7 @@ export function GamepadView(props: {
                 buttonCb(buttonIdx, e, PointerEventType.Up);
               }
             },
+            isSquareButton ? "square" : isRectangleButton ? "rectangle" : "circle",
           )}
         </g>
       );
