@@ -120,15 +120,16 @@ function generateButton(
   downCb: (e: React.PointerEvent) => void,
   upCb: (e: React.PointerEvent) => void,
   cancelCb: (e: React.PointerEvent) => void,
-  shape: "circle" | "rectangle" | "square" = "circle",
+  shape: "circle" | "rectangle" | "tallRectangle" = "circle",
 ) {
+  const rectHeight = shape === "tallRectangle" ? 39 : 26;
   const buttonShape =
-    shape === "rectangle" || shape === "square" ? (
+    shape === "rectangle" || shape === "tallRectangle" ? (
       <rect
         x={x - 35}
-        y={shape === "square" ? y - 35 : y - 13}
+        y={y - rectHeight / 2}
         width={70}
-        height={shape === "square" ? 70 : 26}
+        height={rectHeight}
         rx={3}
         fill={value > 0 ? colAlt : colPrim}
         stroke={colStroke}
@@ -502,7 +503,7 @@ export function GamepadView(props: {
         mapping.buttonName === "options" ||
         mapping.buttonName === "l1" ||
         mapping.buttonName === "r1";
-      const isSquareButton = mapping.buttonName === "l2" || mapping.buttonName === "r2";
+      const isTallRectangleButton = mapping.buttonName === "l2" || mapping.buttonName === "r2";
       return (
         <g key={`button-${index}-${buttonIdx}`}>
           {generateButton(
@@ -526,7 +527,7 @@ export function GamepadView(props: {
                 buttonCb(buttonIdx, e, PointerEventType.Up);
               }
             },
-            isSquareButton ? "square" : isRectangleButton ? "rectangle" : "circle",
+            isTallRectangleButton ? "tallRectangle" : isRectangleButton ? "rectangle" : "circle",
           )}
         </g>
       );
