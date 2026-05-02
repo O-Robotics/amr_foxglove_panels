@@ -134,7 +134,7 @@
       "action": "left_stick_x",
       "source": {
         "type": "axis",
-        "index": 6
+        "index": 2
       },
       "target": {
         "type": "axis",
@@ -154,7 +154,7 @@
       "action": "left_stick_y",
       "source": {
         "type": "axis",
-        "index": 7
+        "index": 5
       },
       "target": {
         "type": "axis",
