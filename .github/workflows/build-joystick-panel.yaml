@@ -52,6 +52,7 @@ jobs:
       - name: Archive existing packaged panels
         run: |
           mkdir -p archive
+          touch archive/.gitkeep
           find . -maxdepth 1 -name "*.foxe" -exec mv {} archive/ \;
 
       - name: Bump panel version
