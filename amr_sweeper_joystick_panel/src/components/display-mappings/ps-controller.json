@@ -6,7 +6,7 @@
         "y": 276,
         "rot": 0,
         "button": 0,
-        "buttonName": "3"
+        "buttonName": "cross"
     },
     {
         "type": "button",
@@ -15,7 +15,7 @@
         "y": 242,
         "rot": 0,
         "button": 1,
-        "buttonName": "2"
+        "buttonName": "circle"
     },
     {
         "type": "button",
@@ -23,8 +23,8 @@
         "x": 363,
         "y": 242,
         "rot": 0,
-        "button": 3,
-        "buttonName": "4"
+        "button": 2,
+        "buttonName": "square"
     },
     {
         "type": "button",
@@ -32,8 +32,8 @@
         "x": 397,
         "y": 210,
         "rot": 0,
-        "button": 4,
-        "buttonName": "1"
+        "button": 3,
+        "buttonName": "triangle"
     },
     {
         "type": "button",

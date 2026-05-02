@@ -47,13 +47,13 @@ function labelFromOutputName(name: string | undefined, fallback: string): string
     case "touchpad":
       return "Touch";
     case "cross":
-      return "Cross";
+      return "3";
     case "circle":
-      return "Circle";
+      return "2";
     case "square":
-      return "Square";
+      return "4";
     case "triangle":
-      return "Triangle";
+      return "1";
     default:
       return name ?? fallback;
   }
