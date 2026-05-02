@@ -1,39 +1,39 @@
 [
     {
         "type": "button",
-        "text": "A",
+        "text": "3",
         "x": 397,
         "y": 276,
         "rot": 0,
         "button": 0,
-        "buttonName": "cross"
+        "buttonName": "3"
     },
     {
         "type": "button",
-        "text": "B",
+        "text": "2",
         "x": 430,
         "y": 242,
         "rot": 0,
         "button": 1,
-        "buttonName": "circle"
+        "buttonName": "2"
     },
     {
         "type": "button",
-        "text": "X",
+        "text": "4",
         "x": 363,
         "y": 242,
         "rot": 0,
         "button": 3,
-        "buttonName": "square"
+        "buttonName": "4"
     },
     {
         "type": "button",
-        "text": "Y",
+        "text": "1",
         "x": 397,
         "y": 210,
         "rot": 0,
         "button": 4,
-        "buttonName": "triangle"
+        "buttonName": "1"
     },
     {
         "type": "button",
