@@ -141,7 +141,7 @@
         "index": 0
       },
       "transform": {
-        "scale": 1,
+        "scale": -1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
