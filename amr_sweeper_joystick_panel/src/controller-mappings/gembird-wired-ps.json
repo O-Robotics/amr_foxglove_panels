@@ -4,6 +4,11 @@
   "id": "gembird-wired-ps",
   "label": "Gembird wired PS Controller",
   "description": "Raw PlayStation-style DirectInput mapping for the Gembird wired PS controller.",
+  "match": {
+    "idIncludesAny": [
+      "gembird"
+    ]
+  },
   "output": {
     "messageType": "sensor_msgs/msg/Joy",
     "axes": [
@@ -21,15 +26,15 @@
       },
       {
         "index": 2,
-        "name": "right_stick_x",
-        "neutral": 0,
-        "description": "Left is positive, right is negative."
-      },
-      {
-        "index": 3,
         "name": "right_stick_y",
         "neutral": 0,
         "description": "Up is positive, down is negative."
+      },
+      {
+        "index": 3,
+        "name": "right_stick_x",
+        "neutral": 0,
+        "description": "Left is positive, right is negative."
       },
       {
         "index": 4,
@@ -178,7 +183,7 @@
       },
       "target": {
         "type": "axis",
-        "index": 2
+        "index": 3
       },
       "transform": {
         "scale": -1,
@@ -198,7 +203,7 @@
       },
       "target": {
         "type": "axis",
-        "index": 3
+        "index": 2
       },
       "transform": {
         "scale": -1,
