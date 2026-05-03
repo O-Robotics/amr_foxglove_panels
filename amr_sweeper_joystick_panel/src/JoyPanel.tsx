@@ -516,7 +516,9 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
   }, [context]);
 
   const showRawGamepadDebug =
-    config.dataSource === "gamepad" && config.controllerMappingId === "gembird-wired";
+    config.dataSource === "gamepad" &&
+    (config.controllerMappingId === "gembird-wired" ||
+      config.controllerMappingId === "esperanza-wireless");
   const activeRawAxes =
     rawGamepad?.axes
       .map((value, index) => ({ index, value }))
@@ -547,9 +549,15 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
         controllerMapping={getControllerMapping(config.controllerMappingId)}
       />
       {showRawGamepadDebug ? (
-        <div style={{ color: "#ddd", fontFamily: "monospace", fontSize: 12, padding: 8 }}>
-          <div>{rawGamepad?.id ?? "No gamepad data"}</div>
-          <div>mapping: {rawGamepad?.mapping || "(none)"}</div>
+        <div
+          style={{
+            color: "#ddd",
+            fontFamily: "monospace",
+            fontSize: 12,
+            padding: "2px 8px 8px",
+            marginTop: -8,
+          }}
+        >
           <div>
             axes:{" "}
             {activeRawAxes.length > 0
