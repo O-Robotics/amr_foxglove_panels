@@ -306,6 +306,7 @@ export function GamepadView(props: {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const displayMapping = psController as DisplayMapping;
   const { numButtons, numAxes } = getMappingDimensions(displayMapping, controllerMapping);
+  const showGembirdModeHint = controllerMapping?.id === "gembird-wired-ps";
 
   useEffect(() => {
     const tmpJoy = {
@@ -659,8 +660,22 @@ export function GamepadView(props: {
         onTouchMove={preventPan}
         onTouchCancel={preventPan}
       >
-        <GamepadBackground />
-        {dispItems}
+        <g transform="translate(0 -18)">
+          <GamepadBackground />
+          {showGembirdModeHint ? (
+            <text
+              x={256}
+              y={272}
+              textAnchor="middle"
+              fill="#ddd"
+              fontSize={12}
+              pointerEvents="none"
+            >
+              Use MODE
+            </text>
+          ) : null}
+          {dispItems}
+        </g>
       </svg>
     </div>
   );
