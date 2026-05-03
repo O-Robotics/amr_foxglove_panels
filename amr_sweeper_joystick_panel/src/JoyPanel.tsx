@@ -527,6 +527,14 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
     rawGamepad?.buttons
       .map((value, index) => ({ index, value }))
       .filter(({ value }) => value > 0.05) ?? [];
+  const activeJoyAxes =
+    joy?.axes
+      .map((value, index) => ({ index, value }))
+      .filter(({ value }) => Math.abs(value) > 0.05) ?? [];
+  const activeJoyButtons =
+    joy?.buttons
+      .map((value, index) => ({ index, value }))
+      .filter(({ value }) => value > 0.05) ?? [];
 
   return (
     <div
@@ -568,6 +576,18 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
             buttons:{" "}
             {activeRawButtons.length > 0
               ? activeRawButtons.map(({ index, value }) => `${index}:${value.toFixed(2)}`).join(" ")
+              : "none"}
+          </div>
+          <div>
+            joy axes:{" "}
+            {activeJoyAxes.length > 0
+              ? activeJoyAxes.map(({ index, value }) => `${index}:${value.toFixed(2)}`).join(" ")
+              : "neutral"}
+          </div>
+          <div>
+            joy buttons:{" "}
+            {activeJoyButtons.length > 0
+              ? activeJoyButtons.map(({ index, value }) => `${index}:${value.toFixed(2)}`).join(" ")
               : "none"}
           </div>
         </div>
