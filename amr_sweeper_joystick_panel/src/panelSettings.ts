@@ -92,6 +92,16 @@ export function buildSettingsTree(
       disabled: config.dataSource !== "gamepad",
       options: buildGamepadOptions(config.gamepadId, gamepadIds),
     },
+    controllerMappingId: {
+      label: "Controller Mapping",
+      input: "select",
+      value: config.controllerMappingId,
+      disabled: config.dataSource !== "gamepad",
+      options: controllerMappings.map((mapping) => ({
+        label: mapping.label,
+        value: mapping.id,
+      })),
+    },
   };
   const publishFields: SettingsTreeFields = {
     publishMode: {

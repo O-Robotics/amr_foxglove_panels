@@ -1,11 +1,13 @@
-import standardPs from "./standard-ps.json";
+import esperanzaWireless from "./esperanza-wireless.json";
+import gembirdWired from "./gembird-wired.json";
 import type { ControllerMapping } from "./types";
 
 export const controllerMappings: ControllerMapping[] = [
-  standardPs as unknown as ControllerMapping,
+  esperanzaWireless as unknown as ControllerMapping,
+  gembirdWired as unknown as ControllerMapping,
 ];
 
-export const defaultControllerMappingId = "standard-ps";
+export const defaultControllerMappingId = "esperanza-wireless";
 
 export function getControllerMapping(id: string): ControllerMapping {
   const mapping =

@@ -516,7 +516,7 @@ function JoyPanel({ context }: { context: PanelExtensionContext }): JSX.Element 
   }, [context]);
 
   const showRawGamepadDebug =
-    config.dataSource === "gamepad" && config.controllerMappingId === "standard-ps";
+    config.dataSource === "gamepad" && config.controllerMappingId === "gembird-wired";
   const activeRawAxes =
     rawGamepad?.axes
       .map((value, index) => ({ index, value }))

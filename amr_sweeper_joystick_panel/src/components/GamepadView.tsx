@@ -306,7 +306,7 @@ export function GamepadView(props: {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const displayMapping = psController as DisplayMapping;
   const { numButtons, numAxes } = getMappingDimensions(displayMapping, controllerMapping);
-  const showModeHint = controllerMapping?.id === "standard-ps";
+  const showModeHint = controllerMapping?.id === "gembird-wired";
 
   useEffect(() => {
     const tmpJoy = {
@@ -667,11 +667,11 @@ export function GamepadView(props: {
               x={256}
               y={272}
               textAnchor="middle"
-              fill="#fff"
+              fill="#111"
               fontSize={16}
               fontWeight="700"
-              stroke="#1a1a1a"
-              strokeWidth={0.75}
+              stroke="#f2f2f2"
+              strokeWidth={0.6}
               paintOrder="stroke"
               letterSpacing={0.6}
               pointerEvents="none"
