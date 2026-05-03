@@ -214,8 +214,8 @@ function generateStick(
   upCb: (e: React.PointerEvent) => void,
   cancelCb: (e: React.PointerEvent) => void,
 ) {
-  const offX = valueX * radius;
-  const offY = valueY * radius;
+  const offX = -valueX * radius;
+  const offY = -valueY * radius;
 
   return (
     <>
