@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "esperanza-wireless",
   "label": "Esperanza-wireless",
-  "description": "Wireless PlayStation-style controller mapping using the browser standard layout.",
+  "description": "Wireless controller mapping aligned to the working Esperanza layout.",
   "output": {
     "messageType": "sensor_msgs/msg/Joy",
     "axes": [
@@ -141,7 +141,7 @@
         "index": 1
       },
       "transform": {
-        "scale": -1,
+        "scale": 1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
@@ -161,7 +161,7 @@
         "index": 0
       },
       "transform": {
-        "scale": -1,
+        "scale": 1,
         "offset": 0,
         "deadzone": 0.08,
         "clamp": [
@@ -194,7 +194,7 @@
       "action": "right_stick_y",
       "source": {
         "type": "axis",
-        "index": 3
+        "index": 5
       },
       "target": {
         "type": "axis",
@@ -255,9 +255,9 @@
     {
       "action": "dpad_x",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 14,
-        "negativeIndex": 15
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "x"
       },
       "target": {
         "type": "axis",
@@ -275,9 +275,9 @@
     {
       "action": "dpad_y",
       "source": {
-        "type": "buttonPair",
-        "positiveIndex": 12,
-        "negativeIndex": 13
+        "type": "hatAxis",
+        "index": 9,
+        "direction": "y"
       },
       "target": {
         "type": "axis",
@@ -298,7 +298,7 @@
       "action": "cross",
       "source": {
         "type": "button",
-        "index": 0,
+        "index": 2,
         "threshold": 0.5
       },
       "target": {
@@ -322,7 +322,7 @@
       "action": "square",
       "source": {
         "type": "button",
-        "index": 2,
+        "index": 3,
         "threshold": 0.5
       },
       "target": {
@@ -334,7 +334,7 @@
       "action": "triangle",
       "source": {
         "type": "button",
-        "index": 3,
+        "index": 0,
         "threshold": 0.5
       },
       "target": {
@@ -442,7 +442,7 @@
       "action": "ps",
       "source": {
         "type": "button",
-        "index": 16,
+        "index": 12,
         "threshold": 0.5
       },
       "target": {
@@ -454,7 +454,7 @@
       "action": "touchpad",
       "source": {
         "type": "button",
-        "index": 17,
+        "index": 13,
         "threshold": 0.5
       },
       "target": {
