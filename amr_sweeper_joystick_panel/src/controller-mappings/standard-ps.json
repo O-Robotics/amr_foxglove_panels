@@ -1,9 +1,9 @@
 {
   "$schema": "./controller-mapping.schema.json",
   "schemaVersion": 1,
-  "id": "gembird-wired-ps",
-  "label": "Gembird wired PS Controller",
-  "description": "Raw PlayStation-style DirectInput mapping for the Gembird wired PS controller.",
+  "id": "standard-ps",
+  "label": "PlayStation Controller",
+  "description": "PlayStation-style controller mapping for the AMR sweeper joystick panel.",
   "output": {
     "messageType": "sensor_msgs/msg/Joy",
     "axes": [

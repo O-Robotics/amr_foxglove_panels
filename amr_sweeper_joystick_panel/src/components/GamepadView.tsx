@@ -306,7 +306,7 @@ export function GamepadView(props: {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const displayMapping = psController as DisplayMapping;
   const { numButtons, numAxes } = getMappingDimensions(displayMapping, controllerMapping);
-  const showGembirdModeHint = controllerMapping?.id === "gembird-wired-ps";
+  const showModeHint = controllerMapping?.id === "standard-ps";
 
   useEffect(() => {
     const tmpJoy = {
@@ -660,15 +660,20 @@ export function GamepadView(props: {
         onTouchMove={preventPan}
         onTouchCancel={preventPan}
       >
-        <g transform="translate(0 -18)">
+        <g transform="translate(0 -32)">
           <GamepadBackground />
-          {showGembirdModeHint ? (
+          {showModeHint ? (
             <text
               x={256}
               y={272}
               textAnchor="middle"
-              fill="#ddd"
-              fontSize={12}
+              fill="#fff"
+              fontSize={16}
+              fontWeight="700"
+              stroke="#1a1a1a"
+              strokeWidth={0.75}
+              paintOrder="stroke"
+              letterSpacing={0.6}
               pointerEvents="none"
             >
               Use MODE
