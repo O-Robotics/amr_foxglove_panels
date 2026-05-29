@@ -2,9 +2,15 @@ name: Build AMR Sweeper Foxglove Panel
 
 on:
   pull_request:
+    paths:
+      - .github/workflows/build-amr_sweeper_panel.yaml
+      - amr_sweeper_panel/**
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/build-amr_sweeper_panel.yaml
+      - amr_sweeper_panel/**
   workflow_dispatch:
 
 permissions:
@@ -22,18 +28,18 @@ jobs:
 
     defaults:
       run:
-        working-directory: amr-sweeper-panel
+        working-directory: amr_sweeper_panel
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: amr-sweeper-panel/package-lock.json
+          cache-dependency-path: amr_sweeper_panel/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -76,8 +82,8 @@ jobs:
           git push
 
       - name: Upload .foxe artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: amr-sweeper-panel
-          path: amr-sweeper-panel/*.foxe
+          name: amr_sweeper_panel
+          path: amr_sweeper_panel/*.foxe
           if-no-files-found: error

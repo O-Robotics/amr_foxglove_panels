@@ -1,6 +1,6 @@
 {
-  "name": "amr-sweeper-panel",
-  "displayName": "amr-sweeper-panel",
+  "name": "amr_sweeper_panel",
+  "displayName": "amr_sweeper_panel",
   "description": "The panel that illustrates a top view of the AMR Sweeper and displays key system_info parameters in a single panel.",
   "publisher": "O-Robotics",
   "homepage": "",
