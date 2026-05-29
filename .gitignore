@@ -1,0 +1,5 @@
+# Review-only robot stack repositories mounted by the local setup script.
+/layer_0_supervisors/
+/layer_1_hardware/
+/layer_2_controllers/
+/layer_3_navigation/

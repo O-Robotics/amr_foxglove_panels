@@ -1,7 +1,7 @@
 import { ExtensionContext } from "@foxglove/extension";
 
-import { initExamplePanel } from "./ExamplePanel";
+import { initAmrSweeperPanel } from "./AmrSweeperPanel";
 
 export function activate(extensionContext: ExtensionContext): void {
-  extensionContext.registerPanel({ name: "amr-sweeper-panel", initPanel: initExamplePanel });
+  extensionContext.registerPanel({ name: "amr-sweeper-panel", initPanel: initAmrSweeperPanel });
 }

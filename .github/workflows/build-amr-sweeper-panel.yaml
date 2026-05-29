@@ -1,4 +1,4 @@
-name: Build Foxglove Joystick Panel
+name: Build AMR Sweeper Foxglove Panel
 
 on:
   pull_request:
@@ -16,13 +16,13 @@ concurrency:
 
 jobs:
   build:
-    name: Build joystick panel
+    name: Build AMR sweeper panel
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     defaults:
       run:
-        working-directory: amr_sweeper_joystick_panel
+        working-directory: amr-sweeper-panel
 
     steps:
       - name: Checkout repository
@@ -33,21 +33,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: amr_sweeper_joystick_panel/package-lock.json
+          cache-dependency-path: amr-sweeper-panel/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build Foxglove panel
         run: npm run build
-
-      - name: Create temporary changelog for packaging
-        run: |
-          cat <<'CHANGELOG' > CHANGELOG.md
-          # Changelog
-
-          Temporary changelog generated in CI so foxglove-extension package can build a .foxe archive.
-          CHANGELOG
 
       - name: Archive existing packaged panels
         run: |
@@ -60,15 +52,12 @@ jobs:
         run: npm version patch --no-git-tag-version
 
       - name: Package Foxglove panel
-        run: npm run foxglove:package
+        run: npm run package
 
       - name: List packaged files
         run: |
           find archive -maxdepth 1 -name "*.foxe" -print || true
           find . -maxdepth 1 -name "*.foxe" -print
-
-      - name: Remove temporary changelog
-        run: rm -f CHANGELOG.md
 
       - name: Commit packaged panel to repository
         if: github.event_name != 'pull_request'
@@ -80,12 +69,12 @@ jobs:
             echo "No packaged panel changes to commit."
             exit 0
           fi
-          git commit -m "Update packaged Foxglove panel [skip ci]"
+          git commit -m "Update packaged AMR Sweeper Foxglove panel [skip ci]"
           git push
 
       - name: Upload .foxe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: amr-sweeper-joystick-panel
-          path: amr_sweeper_joystick_panel/*.foxe
+          name: amr-sweeper-panel
+          path: amr-sweeper-panel/*.foxe
           if-no-files-found: error
