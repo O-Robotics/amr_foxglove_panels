@@ -4,7 +4,7 @@
   "description": "The panel that illustrates a top view of the AMR Sweeper and displays key system_info parameters in a single panel.",
   "publisher": "O-Robotics",
   "homepage": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "UNLICENSED",
   "main": "./dist/extension.js",
   "keywords": [],
