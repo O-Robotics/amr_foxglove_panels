@@ -43,11 +43,11 @@ jobs:
 
       - name: Create temporary changelog for packaging
         run: |
-          cat <<'EOF' > CHANGELOG.md
+          cat <<'CHANGELOG' > CHANGELOG.md
           # Changelog
 
           Temporary changelog generated in CI so foxglove-extension package can build a .foxe archive.
-          EOF
+          CHANGELOG
 
       - name: Archive existing packaged panels
         run: |
