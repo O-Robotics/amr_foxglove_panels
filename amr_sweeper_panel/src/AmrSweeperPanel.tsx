@@ -512,17 +512,17 @@ function RobotTopView({
 
         <image
           href={fullAssemblyImage}
-          x="60"
-          y="14"
-          width="400"
-          height="612"
-          preserveAspectRatio="xMidYMid meet"
+          x="-215"
+          y="48"
+          width="980"
+          height="653"
+          preserveAspectRatio="xMidYMid slice"
         />
-        <rect className="view-shadow" x="54" y="12" width="412" height="616" rx="34" />
-        <BrushArrow cx={129} cy={157} speed={toolSpeeds.left} deadband={deadband} />
-        <BrushArrow cx={392} cy={157} speed={toolSpeeds.right} deadband={deadband} />
-        <WheelArrow x={114} y={460} side="left" speed={wheelSpeeds.left} deadband={deadband} />
-        <WheelArrow x={406} y={460} side="right" speed={wheelSpeeds.right} deadband={deadband} />
+        <rect className="view-shadow" x="24" y="20" width="472" height="590" rx="28" />
+        <BrushArrow cx={148} cy={144} speed={toolSpeeds.left} deadband={deadband} />
+        <BrushArrow cx={372} cy={144} speed={toolSpeeds.right} deadband={deadband} />
+        <WheelArrow x={132} y={470} side="left" speed={wheelSpeeds.left} deadband={deadband} />
+        <WheelArrow x={388} y={470} side="right" speed={wheelSpeeds.right} deadband={deadband} />
 
         <g
           className={safetyLatched ? "stop-button latched" : "stop-button"}
@@ -933,12 +933,8 @@ const STYLES = `
   align-items: center;
   box-sizing: border-box;
   display: flex;
-  width: 650px;
-  min-width: 650px;
-  max-width: 650px;
-  height: 400px;
-  min-height: 400px;
-  max-height: 400px;
+  width: 100%;
+  height: 100%;
   justify-content: center;
   overflow: hidden;
   padding: 0;
@@ -949,38 +945,35 @@ const STYLES = `
 .amr-panel .panel-shell {
   box-sizing: border-box;
   width: 100%;
-  max-width: 100%;
   height: 100%;
-  max-height: 100%;
+  aspect-ratio: 13 / 8;
   overflow: hidden;
   border: 1px solid #15314a;
   border-radius: 12px;
   background: rgba(3, 10, 20, 0.92);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
-  padding: 6px;
+  padding: 4px;
 }
 .amr-panel .dashboard {
   display: grid;
-  grid-template-columns: 420px 212px;
-  column-gap: 6px;
+  grid-template-columns: minmax(0, 2.15fr) minmax(180px, 1fr);
+  column-gap: 4px;
   width: 100%;
   height: 100%;
 }
 .amr-panel .visual-panel {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  width: 420px;
-  height: 386px;
+  gap: 3px;
   min-width: 0;
+  min-height: 0;
 }
 .amr-panel .sidebar {
   display: grid;
-  grid-template-rows: 42px 108px 70px 154px;
+  grid-template-rows: 34px minmax(0, 1fr) 66px minmax(112px, 1.2fr);
   gap: 4px;
-  width: 212px;
-  height: 386px;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 .amr-panel .info-section, .amr-panel .control-panel {
@@ -995,6 +988,7 @@ const STYLES = `
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 4px;
+  min-height: 0;
 }
 .amr-panel .mini-state {
   align-items: flex-end;
@@ -1106,12 +1100,12 @@ const STYLES = `
   border: 1px solid #1f2937;
   border-radius: 10px;
   display: flex;
-  width: 420px;
-  height: 354px;
+  width: 100%;
+  height: 100%;
   justify-content: center;
   min-height: 0;
   overflow: hidden;
-  padding: 2px;
+  padding: 0;
 }
 .amr-panel .robot-view { height: 100%; width: 100%; }
 .amr-panel .view-shadow { fill: url(#shadowFade); stroke: rgba(107, 114, 128, 0.35); stroke-width: 3; }
@@ -1132,9 +1126,9 @@ const STYLES = `
   gap: 4px;
   font-size: 9px;
   line-height: 1.2;
-  width: 420px;
-  min-height: 28px;
-  max-height: 28px;
+  width: 100%;
+  min-height: 22px;
+  max-height: 22px;
   overflow: hidden;
 }
 `;
