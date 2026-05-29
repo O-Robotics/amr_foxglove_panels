@@ -512,17 +512,17 @@ function RobotTopView({
 
         <image
           href={fullAssemblyImage}
-          x="-215"
-          y="48"
-          width="980"
-          height="653"
+          x="-300"
+          y="18"
+          width="1150"
+          height="767"
           preserveAspectRatio="xMidYMid slice"
         />
-        <rect className="view-shadow" x="24" y="20" width="472" height="590" rx="28" />
-        <BrushArrow cx={148} cy={144} speed={toolSpeeds.left} deadband={deadband} />
-        <BrushArrow cx={372} cy={144} speed={toolSpeeds.right} deadband={deadband} />
-        <WheelArrow x={132} y={470} side="left" speed={wheelSpeeds.left} deadband={deadband} />
-        <WheelArrow x={388} y={470} side="right" speed={wheelSpeeds.right} deadband={deadband} />
+        <rect className="view-shadow" x="10" y="8" width="500" height="620" rx="24" />
+        <BrushArrow cx={150} cy={126} speed={toolSpeeds.left} deadband={deadband} />
+        <BrushArrow cx={370} cy={126} speed={toolSpeeds.right} deadband={deadband} />
+        <WheelArrow x={135} y={484} side="left" speed={wheelSpeeds.left} deadband={deadband} />
+        <WheelArrow x={385} y={484} side="right" speed={wheelSpeeds.right} deadband={deadband} />
 
         <g
           className={safetyLatched ? "stop-button latched" : "stop-button"}
