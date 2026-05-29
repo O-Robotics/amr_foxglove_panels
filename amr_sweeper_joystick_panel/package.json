@@ -3,7 +3,7 @@
   "displayName": "OR-Joystick",
   "description": "Foxglove panel extension for joystick/gamepad control.",
   "publisher": "orob",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "main": "./dist/extension.js",
   "keywords": [],
   "scripts": {
