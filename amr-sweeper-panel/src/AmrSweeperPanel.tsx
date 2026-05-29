@@ -1,4 +1,4 @@
-import { MessageEvent, PanelExtensionContext } from "@foxglove/extension";
+import { MessageEvent, PanelExtensionContext, Time } from "@foxglove/extension";
 import { ReactElement, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -135,7 +135,7 @@ type PanelSettingsEditor = {
   nodes: SettingsTreeNodes;
 };
 type PanelContextWithSettings = PanelExtensionContext & {
-  updatePanelSettingsEditor?: (editor: PanelSettingsEditor) => void;
+  updatePanelSettingsEditor: (editor: PanelSettingsEditor) => void;
 };
 type PanelContextWithServices = PanelExtensionContext & {
   callService?: (service: string, request: Record<string, unknown>) => Promise<unknown>;
@@ -205,8 +205,18 @@ function resolveService(namespace: string, service: string): string {
   return resolveTopic(namespace, service);
 }
 
+function timeToMs(time: Time | undefined): number | undefined {
+  if (!time) {
+    return undefined;
+  }
+  return time.sec * 1000 + time.nsec / 1e6;
+}
+
 function mergeConfig(initialState: unknown): Config {
-  return { ...DEFAULT_CONFIG, ...(typeof initialState === "object" && initialState != undefined ? initialState : {}) };
+  return {
+    ...DEFAULT_CONFIG,
+    ...(typeof initialState === "object" && initialState != undefined ? initialState : {}),
+  };
 }
 
 function formatPercent(value: unknown): string {
@@ -214,7 +224,9 @@ function formatPercent(value: unknown): string {
 }
 
 function formatNumber(value: unknown, digits = 1, suffix = ""): string {
-  return typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(digits)}${suffix}` : "—";
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${value.toFixed(digits)}${suffix}`
+    : "—";
 }
 
 function batteryStatusLabel(status: unknown): string {
@@ -232,13 +244,24 @@ function batteryStatusLabel(status: unknown): string {
   }
 }
 
-function latestSeverity(diagnostics?: LatestMessage<DiagnosticArray>): { level: number; label: string; className: string } {
-  const level = Math.max(...(diagnostics?.message.status ?? []).map((status) => status.level ?? 0), 0);
+function latestSeverity(diagnostics?: LatestMessage<DiagnosticArray>): {
+  level: number;
+  label: string;
+  className: string;
+} {
+  const level = Math.max(
+    ...(diagnostics?.message.status ?? []).map((status) => status.level ?? 0),
+    0,
+  );
   const mapped = DIAGNOSTIC_LEVELS[level] ?? { label: `LEVEL ${level}`, className: "warn" };
   return { level, ...mapped };
 }
 
-function isStale(latest: LatestMessage<unknown> | undefined, nowMs: number, staleAfterSeconds: number): boolean {
+function isStale(
+  latest: LatestMessage<unknown> | undefined,
+  nowMs: number,
+  staleAfterSeconds: number,
+): boolean {
   if (!latest) {
     return true;
   }
@@ -258,14 +281,22 @@ function buildSettingsTree(config: Config): SettingsTreeNodes {
     namespace: { label: "Namespace", input: "string", value: config.namespace },
     systemInfoTopic: { label: "System info", input: "string", value: config.systemInfoTopic },
     batteryStateTopic: { label: "Battery state", input: "string", value: config.batteryStateTopic },
-    batteryHealthTopic: { label: "Battery health", input: "string", value: config.batteryHealthTopic },
+    batteryHealthTopic: {
+      label: "Battery health",
+      input: "string",
+      value: config.batteryHealthTopic,
+    },
     fsmStateTopic: { label: "FSM state", input: "string", value: config.fsmStateTopic },
     fsmStatusTopic: { label: "FSM status", input: "string", value: config.fsmStatusTopic },
     safetyStopTopic: { label: "Safety stop", input: "string", value: config.safetyStopTopic },
     safetyStatusTopic: { label: "Safety status", input: "string", value: config.safetyStatusTopic },
     wheelCommandTopic: { label: "Wheel command", input: "string", value: config.wheelCommandTopic },
     toolCommandTopic: { label: "Tool command", input: "string", value: config.toolCommandTopic },
-    staleAfterSeconds: { label: "Stale after sec", input: "number", value: config.staleAfterSeconds },
+    staleAfterSeconds: {
+      label: "Stale after sec",
+      input: "number",
+      value: config.staleAfterSeconds,
+    },
     motionStaleAfterSeconds: {
       label: "Motion stale sec",
       input: "number",
@@ -276,8 +307,16 @@ function buildSettingsTree(config: Config): SettingsTreeNodes {
 
   const serviceFields: SettingsTreeFields = {
     fsmRequestService: { label: "FSM request", input: "string", value: config.fsmRequestService },
-    missionListService: { label: "List missions", input: "string", value: config.missionListService },
-    missionExecuteService: { label: "Execute mission", input: "string", value: config.missionExecuteService },
+    missionListService: {
+      label: "List missions",
+      input: "string",
+      value: config.missionListService,
+    },
+    missionExecuteService: {
+      label: "Execute mission",
+      input: "string",
+      value: config.missionExecuteService,
+    },
     missionEndService: { label: "End mission", input: "string", value: config.missionEndService },
     missionIdToExecute: { label: "Mission ID", input: "string", value: config.missionIdToExecute },
     clearSafetyStopService: {
@@ -293,18 +332,31 @@ function buildSettingsTree(config: Config): SettingsTreeNodes {
   };
 }
 
+function isSettingsUpdateAction(
+  action: SettingsTreeAction,
+): action is Extract<SettingsTreeAction, { action: "update" }> {
+  return action.action === "update";
+}
+
 function reduceSettingsAction(previous: Config, action: SettingsTreeAction): Config {
-  if (action.action !== "update") {
+  if (!isSettingsUpdateAction(action)) {
     return previous;
   }
-  const key = action.payload.path.at(-1) as keyof Config | undefined;
+  const key = action.payload.path[action.payload.path.length - 1] as keyof Config | undefined;
   if (key == undefined || !(key in previous)) {
     return previous;
   }
   const value = action.payload.value;
-  if (key === "staleAfterSeconds" || key === "motionStaleAfterSeconds" || key === "motionDeadband") {
+  if (
+    key === "staleAfterSeconds" ||
+    key === "motionStaleAfterSeconds" ||
+    key === "motionDeadband"
+  ) {
     const numeric = typeof value === "number" ? value : Number(value);
-    return { ...previous, [key]: Number.isFinite(numeric) && numeric >= 0 ? numeric : previous[key] };
+    return {
+      ...previous,
+      [key]: Number.isFinite(numeric) && numeric >= 0 ? numeric : previous[key],
+    };
   }
   if (typeof value === "string") {
     return { ...previous, [key]: value };
@@ -312,8 +364,10 @@ function reduceSettingsAction(previous: Config, action: SettingsTreeAction): Con
   return previous;
 }
 
-
-function diagnosticValue(diagnostics: LatestMessage<DiagnosticArray> | undefined, key: string): string | undefined {
+function diagnosticValue(
+  diagnostics: LatestMessage<DiagnosticArray> | undefined,
+  key: string,
+): string | undefined {
   for (const status of diagnostics?.message.status ?? []) {
     const value = status.values?.find((candidate) => candidate.key === key)?.value;
     if (value != undefined) {
@@ -327,7 +381,11 @@ function isSafetyStopLatched(diagnostics: LatestMessage<DiagnosticArray> | undef
   return diagnosticValue(diagnostics, "stop_active") === "true";
 }
 
-function twistWheelSpeeds(command: LatestMessage<Twist> | undefined, nowMs: number, config: Config): { left: number; right: number } {
+function twistWheelSpeeds(
+  command: LatestMessage<Twist> | undefined,
+  nowMs: number,
+  config: Config,
+): { left: number; right: number } {
   if (isStale(command, nowMs, config.motionStaleAfterSeconds)) {
     return { left: 0, right: 0 };
   }
@@ -336,7 +394,11 @@ function twistWheelSpeeds(command: LatestMessage<Twist> | undefined, nowMs: numb
   return { left: linearX - angularZ, right: linearX + angularZ };
 }
 
-function twistToolSpeeds(command: LatestMessage<Twist> | undefined, nowMs: number, config: Config): { left: number; right: number } {
+function twistToolSpeeds(
+  command: LatestMessage<Twist> | undefined,
+  nowMs: number,
+  config: Config,
+): { left: number; right: number } {
   if (isStale(command, nowMs, config.motionStaleAfterSeconds)) {
     return { left: 0, right: 0 };
   }
@@ -349,7 +411,19 @@ function moving(value: number, deadband: number): boolean {
   return Math.abs(value) > deadband;
 }
 
-function WheelArrow({ x, y, side, speed, deadband }: { x: number; y: number; side: "left" | "right"; speed: number; deadband: number }): ReactElement | null {
+function WheelArrow({
+  x,
+  y,
+  side,
+  speed,
+  deadband,
+}: {
+  x: number;
+  y: number;
+  side: "left" | "right";
+  speed: number;
+  deadband: number;
+}): ReactElement | null {
   if (!moving(speed, deadband)) {
     return null;
   }
@@ -360,12 +434,24 @@ function WheelArrow({ x, y, side, speed, deadband }: { x: number; y: number; sid
   return (
     <g className="motion-arrow wheel-arrow">
       <line x1={arrowX} y1={startY} x2={arrowX} y2={endY} />
-      <polygon points={`${arrowX},${endY} ${arrowX - 8},${endY + (forward ? 14 : -14)} ${arrowX + 8},${endY + (forward ? 14 : -14)}`} />
+      <polygon
+        points={`${arrowX},${endY} ${arrowX - 8},${endY + (forward ? 14 : -14)} ${arrowX + 8},${endY + (forward ? 14 : -14)}`}
+      />
     </g>
   );
 }
 
-function BrushArrow({ cx, cy, speed, deadband }: { cx: number; cy: number; speed: number; deadband: number }): ReactElement | null {
+function BrushArrow({
+  cx,
+  cy,
+  speed,
+  deadband,
+}: {
+  cx: number;
+  cy: number;
+  speed: number;
+  deadband: number;
+}): ReactElement | null {
   if (!moving(speed, deadband)) {
     return null;
   }
@@ -382,7 +468,9 @@ function BrushArrow({ cx, cy, speed, deadband }: { cx: number; cy: number; speed
     <g className="motion-arrow brush-arrow">
       <path d={`M ${startX} ${startY} A 48 48 0 0 ${sweep} ${endX} ${endY}`} />
       <polygon points={head} />
-      <text x={cx} y={cy - 60}>{clockwise ? "CW" : "CCW"}</text>
+      <text x={cx} y={cy - 60}>
+        {clockwise ? "CW" : "CCW"}
+      </text>
     </g>
   );
 }
@@ -400,7 +488,12 @@ function RobotTopView({
 }): ReactElement {
   return (
     <div className="robot-view-shell">
-      <svg className="robot-view" viewBox="0 0 520 640" role="img" aria-label="AMR Sweeper top view">
+      <svg
+        className="robot-view"
+        viewBox="0 0 520 640"
+        role="img"
+        aria-label="AMR Sweeper top view"
+      >
         <defs>
           <filter id="redGlow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="8" result="blur" />
@@ -449,8 +542,14 @@ function RobotTopView({
         <BrushArrow cx={122} cy={165} speed={toolSpeeds.left} deadband={deadband} />
         <BrushArrow cx={398} cy={165} speed={toolSpeeds.right} deadband={deadband} />
 
-        <path className="robot-body" d="M135 90 Q135 45 185 45 L335 45 Q385 45 385 90 L385 210 Q385 288 352 382 L337 520 Q332 575 282 592 L238 592 Q188 575 183 520 L168 382 Q135 288 135 210 Z" />
-        <path className="center-panel" d="M230 48 L290 48 Q305 230 292 520 L228 520 Q215 230 230 48 Z" />
+        <path
+          className="robot-body"
+          d="M135 90 Q135 45 185 45 L335 45 Q385 45 385 90 L385 210 Q385 288 352 382 L337 520 Q332 575 282 592 L238 592 Q188 575 183 520 L168 382 Q135 288 135 210 Z"
+        />
+        <path
+          className="center-panel"
+          d="M230 48 L290 48 Q305 230 292 520 L228 520 Q215 230 230 48 Z"
+        />
 
         <rect className="wheel left-wheel" x="86" y="360" width="56" height="142" rx="14" />
         <rect className="wheel right-wheel" x="378" y="360" width="56" height="142" rx="14" />
@@ -462,12 +561,19 @@ function RobotTopView({
         <rect className="yellow-marker" x="214" y="498" width="16" height="48" rx="8" />
         <rect className="yellow-marker" x="290" y="498" width="16" height="48" rx="8" />
 
-        <g className={safetyLatched ? "stop-button latched" : "stop-button"} filter={safetyLatched ? "url(#redGlow)" : undefined}>
+        <g
+          className={safetyLatched ? "stop-button latched" : "stop-button"}
+          filter={safetyLatched ? "url(#redGlow)" : undefined}
+        >
           <rect x="216" y="268" width="88" height="44" rx="12" />
-          <text x="260" y="297">STOP</text>
+          <text x="260" y="297">
+            STOP
+          </text>
         </g>
 
-        <text className="robot-caption" x="260" y="625">Wheel arrows: forward/backward · Brush arrows: CW/CCW · STOP glows when latched</text>
+        <text className="robot-caption" x="260" y="625">
+          Wheel arrows: forward/backward · Brush arrows: CW/CCW · STOP glows when latched
+        </text>
       </svg>
     </div>
   );
@@ -477,7 +583,15 @@ function StatusPill({ label, tone = "neutral" }: { label: string; tone?: string 
   return <span className={`status-pill ${tone}`}>{label}</span>;
 }
 
-function Card({ title, children, footer }: { title: string; children: ReactElement | ReactElement[]; footer?: string }): ReactElement {
+function Card({
+  title,
+  children,
+  footer,
+}: {
+  title: string;
+  children: ReactElement | ReactElement[];
+  footer?: string;
+}): ReactElement {
   return (
     <section className="card">
       <h2>{title}</h2>
@@ -487,7 +601,13 @@ function Card({ title, children, footer }: { title: string; children: ReactEleme
   );
 }
 
-function Metric({ label, value }: { label: string; value: string | number | undefined }): ReactElement {
+function Metric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | undefined;
+}): ReactElement {
   return (
     <div className="metric">
       <span>{label}</span>
@@ -496,7 +616,11 @@ function Metric({ label, value }: { label: string; value: string | number | unde
   );
 }
 
-function DiagnosticsSummary({ diagnostics }: { diagnostics?: LatestMessage<DiagnosticArray> }): ReactElement {
+function DiagnosticsSummary({
+  diagnostics,
+}: {
+  diagnostics?: LatestMessage<DiagnosticArray>;
+}): ReactElement {
   const severity = latestSeverity(diagnostics);
   const statuses = diagnostics?.message.status ?? [];
   return (
@@ -539,7 +663,11 @@ function ServiceControls({
       setServiceState({ name: serviceName, status: "pending", message: "Waiting for response…" });
       try {
         const response = await serviceCaller(serviceName, request);
-        setServiceState({ name: serviceName, status: "success", message: JSON.stringify(response) });
+        setServiceState({
+          name: serviceName,
+          status: "success",
+          message: JSON.stringify(response),
+        });
       } catch (error) {
         setServiceState({
           name: serviceName,
@@ -664,6 +792,7 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
   const [topicState, setTopicState] = useState<TopicState>({});
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [useWallClock, setUseWallClock] = useState(true);
   const [serviceState, setServiceState] = useState<ServiceCallState>({ name: "", status: "idle" });
 
   const topics = useMemo(
@@ -686,46 +815,61 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
   }, []);
 
   useEffect(() => {
+    const settingsContext = context as PanelContextWithSettings;
     context.saveState(config);
-    (context as PanelContextWithSettings).updatePanelSettingsEditor?.({
+    settingsContext.updatePanelSettingsEditor({
       actionHandler: settingsActionHandler,
       nodes: buildSettingsTree(config),
     });
   }, [config, context, settingsActionHandler]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
+    if (!useWallClock) {
+      return undefined;
+    }
+    const interval = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [useWallClock]);
 
   useLayoutEffect(() => {
     context.onRender = (renderState, done) => {
       setRenderDone(() => done);
-      const receivedAt = Date.now();
+      const currentTimeMs = timeToMs(renderState.currentTime);
+      setUseWallClock(currentTimeMs == undefined);
+      const frameTimeMs = currentTimeMs ?? Date.now();
+      setNowMs(frameTimeMs);
+      if (renderState.didSeek === true) {
+        setTopicState({});
+      }
       const currentFrame = renderState.currentFrame ?? [];
       if (currentFrame.length > 0) {
         setTopicState((previous) => {
           const next = { ...previous };
           for (const event of currentFrame as readonly MessageEvent[]) {
+            const receiveTimeMs = timeToMs(event.receiveTime) ?? frameTimeMs;
             const topic = event.topic;
             if (topic === topics.systemInfo) {
-              next.systemInfo = { message: event.message as SystemState, receiveTimeMs: receivedAt };
+              next.systemInfo = { message: event.message as SystemState, receiveTimeMs };
             } else if (topic === topics.batteryState) {
-              next.batteryState = { message: event.message as BatteryState, receiveTimeMs: receivedAt };
+              next.batteryState = { message: event.message as BatteryState, receiveTimeMs };
             } else if (topic === topics.batteryHealth) {
-              next.batteryHealth = { message: event.message as DiagnosticArray, receiveTimeMs: receivedAt };
+              next.batteryHealth = { message: event.message as DiagnosticArray, receiveTimeMs };
             } else if (topic === topics.fsmState) {
-              next.fsmState = { message: event.message as FSMState, receiveTimeMs: receivedAt };
+              next.fsmState = { message: event.message as FSMState, receiveTimeMs };
             } else if (topic === topics.fsmStatus) {
-              next.fsmStatus = { message: event.message as FSMStatus, receiveTimeMs: receivedAt };
+              next.fsmStatus = { message: event.message as FSMStatus, receiveTimeMs };
             } else if (topic === topics.safetyStop) {
-              next.safetyStop = { message: event.message as SafetyStop, receiveTimeMs: receivedAt };
+              next.safetyStop = { message: event.message as SafetyStop, receiveTimeMs };
             } else if (topic === topics.safetyStatus) {
-              next.safetyStatus = { message: event.message as DiagnosticArray, receiveTimeMs: receivedAt };
+              next.safetyStatus = { message: event.message as DiagnosticArray, receiveTimeMs };
             } else if (topic === topics.wheelCommand) {
-              next.wheelCommand = { message: event.message as Twist, receiveTimeMs: receivedAt };
+              next.wheelCommand = { message: event.message as Twist, receiveTimeMs };
             } else if (topic === topics.toolCommand) {
-              next.toolCommand = { message: event.message as Twist, receiveTimeMs: receivedAt };
+              next.toolCommand = { message: event.message as Twist, receiveTimeMs };
             }
           }
           return next;
@@ -734,6 +878,8 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
     };
 
     context.watch("currentFrame");
+    context.watch("currentTime");
+    context.watch("didSeek");
     context.subscribe(Object.values(topics).map((topic) => ({ topic })));
 
     return () => {
@@ -745,13 +891,17 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
     renderDone?.();
   }, [renderDone]);
 
-  const fsm = topicState.fsmStatus?.message ?? topicState.fsmState?.message;
-  const fsmState = fsm.current_state ?? "UNKNOWN";
+  const fsmStatusMessage = topicState.fsmStatus?.message;
+  const fsmStateMessage = topicState.fsmState?.message;
+  const fsm = fsmStatusMessage ?? fsmStateMessage;
+  const fsmState = fsm?.current_state ?? "UNKNOWN";
   const fsmColor = FSM_STATE_COLORS[fsmState] ?? "#64748b";
   const safetySeverity = latestSeverity(topicState.safetyStatus);
   const batterySeverity = latestSeverity(topicState.batteryHealth);
-  const safetyLatched = isSafetyStopLatched(topicState.safetyStatus);
-  const hasSafetyStop = topicState.safetyStop != undefined;
+  const safetyStatusIsStale = isStale(topicState.safetyStatus, nowMs, config.staleAfterSeconds);
+  const safetyStopIsStale = isStale(topicState.safetyStop, nowMs, config.staleAfterSeconds);
+  const safetyLatched = !safetyStatusIsStale && isSafetyStopLatched(topicState.safetyStatus);
+  const hasSafetyStop = !safetyStopIsStale && topicState.safetyStop != undefined;
 
   return (
     <div className="amr-panel">
@@ -764,7 +914,7 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
         <div className="hero-status" style={{ borderColor: fsmColor }}>
           <span style={{ background: fsmColor }} />
           <strong>{fsmState}</strong>
-          <small>Profile {fsm.current_profile ?? "—"}</small>
+          <small>Profile {fsm?.current_profile ?? "—"}</small>
         </div>
       </header>
 
@@ -789,64 +939,146 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
         <Card title="System Info" footer={ageLabel(topicState.systemInfo, nowMs)}>
           <div className="stale-row">
             <StatusPill
-              label={isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"}
-              tone={isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "stale" : "ok"}
+              label={
+                isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"
+              }
+              tone={
+                isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "stale" : "ok"
+              }
             />
           </div>
           <Metric label="Device" value={topicState.systemInfo?.message.device_type} />
           <Metric label="Robot #" value={topicState.systemInfo?.message.robot_number} />
-          <Metric label="Temperature" value={formatNumber(topicState.systemInfo?.message.temperature, 0, "°C")} />
-          <Metric label="CPU load" value={formatNumber(topicState.systemInfo?.message.cpu_load, 0, "%")} />
-          <Metric label="CPU idle" value={formatNumber(topicState.systemInfo?.message.cpu_idle, 0, "%")} />
-          <Metric label="Memory" value={formatNumber(topicState.systemInfo?.message.memory_usage, 0, "%")} />
-          <Metric label="Disk" value={formatNumber(topicState.systemInfo?.message.disk_usage, 0, "%")} />
+          <Metric
+            label="Temperature"
+            value={formatNumber(topicState.systemInfo?.message.temperature, 0, "°C")}
+          />
+          <Metric
+            label="CPU load"
+            value={formatNumber(topicState.systemInfo?.message.cpu_load, 0, "%")}
+          />
+          <Metric
+            label="CPU idle"
+            value={formatNumber(topicState.systemInfo?.message.cpu_idle, 0, "%")}
+          />
+          <Metric
+            label="Memory"
+            value={formatNumber(topicState.systemInfo?.message.memory_usage, 0, "%")}
+          />
+          <Metric
+            label="Disk"
+            value={formatNumber(topicState.systemInfo?.message.disk_usage, 0, "%")}
+          />
           <Metric label="Connection" value={topicState.systemInfo?.message.conn_type} />
-          <Metric label="Wi-Fi / Mobile" value={`${topicState.systemInfo?.message.is_wifi ? "Wi-Fi" : "—"} / ${topicState.systemInfo?.message.is_mobile ? "Mobile" : "—"}`} />
+          <Metric
+            label="Wi-Fi / Mobile"
+            value={`${topicState.systemInfo?.message.is_wifi === true ? "Wi-Fi" : "—"} / ${
+              topicState.systemInfo?.message.is_mobile === true ? "Mobile" : "—"
+            }`}
+          />
         </Card>
 
         <Card title="Battery" footer={ageLabel(topicState.batteryState, nowMs)}>
           <div className="stale-row">
             <StatusPill label={batterySeverity.label} tone={batterySeverity.className} />
             <StatusPill
-              label={isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"}
-              tone={isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "stale" : "ok"}
+              label={
+                isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"
+              }
+              tone={
+                isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "stale" : "ok"
+              }
             />
           </div>
-          <Metric label="Charge" value={formatPercent(topicState.batteryState?.message.percentage)} />
-          <Metric label="Voltage" value={formatNumber(topicState.batteryState?.message.voltage, 2, " V")} />
-          <Metric label="Current" value={formatNumber(topicState.batteryState?.message.current, 2, " A")} />
-          <Metric label="State" value={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)} />
-          <Metric label="Max temp" value={formatNumber(topicState.batteryState?.message.temperature, 1, "°C")} />
-          <Metric label="Cells" value={topicState.batteryState?.message.cell_voltage?.length ?? "—"} />
+          <Metric
+            label="Charge"
+            value={formatPercent(topicState.batteryState?.message.percentage)}
+          />
+          <Metric
+            label="Voltage"
+            value={formatNumber(topicState.batteryState?.message.voltage, 2, " V")}
+          />
+          <Metric
+            label="Current"
+            value={formatNumber(topicState.batteryState?.message.current, 2, " A")}
+          />
+          <Metric
+            label="State"
+            value={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)}
+          />
+          <Metric
+            label="Max temp"
+            value={formatNumber(topicState.batteryState?.message.temperature, 1, "°C")}
+          />
+          <Metric
+            label="Cells"
+            value={topicState.batteryState?.message.cell_voltage?.length ?? "—"}
+          />
           <DiagnosticsSummary diagnostics={topicState.batteryHealth} />
         </Card>
 
-        <Card title="FSM Supervisor" footer={ageLabel(topicState.fsmStatus ?? topicState.fsmState, nowMs)}>
+        <Card
+          title="FSM Supervisor"
+          footer={ageLabel(topicState.fsmStatus ?? topicState.fsmState, nowMs)}
+        >
           <div className="stale-row">
             <StatusPill
-              label={isStale(topicState.fsmStatus ?? topicState.fsmState, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"}
-              tone={isStale(topicState.fsmStatus ?? topicState.fsmState, nowMs, config.staleAfterSeconds) ? "stale" : "ok"}
+              label={
+                isStale(
+                  topicState.fsmStatus ?? topicState.fsmState,
+                  nowMs,
+                  config.staleAfterSeconds,
+                )
+                  ? "STALE"
+                  : "LIVE"
+              }
+              tone={
+                isStale(
+                  topicState.fsmStatus ?? topicState.fsmState,
+                  nowMs,
+                  config.staleAfterSeconds,
+                )
+                  ? "stale"
+                  : "ok"
+              }
             />
           </div>
           <Metric label="State" value={fsmState} />
-          <Metric label="Lifecycle" value={(fsm as FSMStatus).current_lifecycle_state} />
-          <Metric label="Current profile" value={fsm.current_profile} />
-          <Metric label="Transition profile" value={(fsm as FSMStatus).transitioning_to_profile} />
-          <Metric label="Transition" value={(fsm as FSMStatus).transition_status} />
-          <Metric label="Requester" value={(fsm as FSMStatus).last_requester} />
-          <Metric label="Priority" value={(fsm as FSMStatus).last_request_priority} />
-          <Metric label="Priority gate" value={(fsm as FSMStatus).effective_priority_gate} />
-          <Metric label="Priority age" value={formatNumber((fsm as FSMStatus).priority_age_sec, 1, "s")} />
-          <p className="message-box">{(fsm as FSMStatus).last_message ?? "No FSM status message received."}</p>
+          <Metric label="Lifecycle" value={fsmStatusMessage?.current_lifecycle_state} />
+          <Metric label="Current profile" value={fsm?.current_profile} />
+          <Metric label="Transition profile" value={fsmStatusMessage?.transitioning_to_profile} />
+          <Metric label="Transition" value={fsmStatusMessage?.transition_status} />
+          <Metric label="Requester" value={fsmStatusMessage?.last_requester} />
+          <Metric label="Priority" value={fsmStatusMessage?.last_request_priority} />
+          <Metric label="Priority gate" value={fsmStatusMessage?.effective_priority_gate} />
+          <Metric
+            label="Priority age"
+            value={formatNumber(fsmStatusMessage?.priority_age_sec, 1, "s")}
+          />
+          <p className="message-box">
+            {fsmStatusMessage?.last_message ?? "No FSM status message received."}
+          </p>
         </Card>
 
-        <Card title="Safety" footer={ageLabel(topicState.safetyStatus ?? topicState.safetyStop, nowMs)}>
+        <Card
+          title="Safety"
+          footer={ageLabel(topicState.safetyStatus ?? topicState.safetyStop, nowMs)}
+        >
           <div className="stale-row">
-            <StatusPill label={hasSafetyStop ? "STOP SEEN" : "NO STOP MSG"} tone={hasSafetyStop ? "error" : "neutral"} />
+            <StatusPill
+              label={hasSafetyStop ? "STOP SEEN" : "NO STOP MSG"}
+              tone={hasSafetyStop ? "error" : "neutral"}
+            />
             <StatusPill label={safetySeverity.label} tone={safetySeverity.className} />
+            <StatusPill
+              label={safetyStatusIsStale ? "STALE" : "LIVE"}
+              tone={safetyStatusIsStale ? "stale" : "ok"}
+            />
           </div>
           <Metric label="Last sender" value={topicState.safetyStop?.message.sender} />
-          <p className="message-box">{topicState.safetyStop?.message.reason ?? "No safety stop reason received."}</p>
+          <p className="message-box">
+            {topicState.safetyStop?.message.reason ?? "No safety stop reason received."}
+          </p>
           <DiagnosticsSummary diagnostics={topicState.safetyStatus} />
         </Card>
 

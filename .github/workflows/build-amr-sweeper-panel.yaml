@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: write
-  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -38,6 +37,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint Foxglove panel
+        run: npm run lint
 
       - name: Build Foxglove panel
         run: npm run build
@@ -72,7 +74,6 @@ jobs:
           fi
           git commit -m "Update packaged AMR Sweeper Foxglove panel [skip ci]"
           git push
-        run: find . -maxdepth 1 -name "*.foxe" -print
 
       - name: Upload .foxe artifact
         uses: actions/upload-artifact@v4
