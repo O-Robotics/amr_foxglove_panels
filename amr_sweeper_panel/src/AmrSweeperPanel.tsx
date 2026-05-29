@@ -2,6 +2,8 @@ import { MessageEvent, PanelExtensionContext, Time } from "@foxglove/extension";
 import { ReactElement, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+import fullAssemblyImage from "./fullAssemblyImage";
+
 type Config = {
   namespace: string;
   systemInfoTopic: string;
@@ -502,78 +504,35 @@ function RobotTopView({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <linearGradient id="bodyGradient" x1="0" x2="1">
-            <stop offset="0" stopColor="#9ca3af" />
-            <stop offset="0.5" stopColor="#d4d7e5" />
-            <stop offset="1" stopColor="#9ca3af" />
+          <linearGradient id="shadowFade" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="rgba(8,15,28,0.05)" />
+            <stop offset="1" stopColor="rgba(8,15,28,0.28)" />
           </linearGradient>
-          <pattern id="tread" width="8" height="14" patternUnits="userSpaceOnUse">
-            <rect width="8" height="14" fill="#facc15" />
-            <rect y="1" width="8" height="2" fill="#fef08a" opacity="0.8" />
-          </pattern>
         </defs>
 
-        <g className="brush left-brush" transform="translate(122 165)">
-          {Array.from({ length: 44 }).map((_, index) => (
-            <line
-              key={`left-bristle-${index}`}
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="-78"
-              transform={`rotate(${index * 8.2})`}
-            />
-          ))}
-          <circle r="52" />
-        </g>
-        <g className="brush right-brush" transform="translate(398 165)">
-          {Array.from({ length: 44 }).map((_, index) => (
-            <line
-              key={`right-bristle-${index}`}
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="-78"
-              transform={`rotate(${index * 8.2})`}
-            />
-          ))}
-          <circle r="52" />
-        </g>
-        <BrushArrow cx={122} cy={165} speed={toolSpeeds.left} deadband={deadband} />
-        <BrushArrow cx={398} cy={165} speed={toolSpeeds.right} deadband={deadband} />
-
-        <path
-          className="robot-body"
-          d="M135 90 Q135 45 185 45 L335 45 Q385 45 385 90 L385 210 Q385 288 352 382 L337 520 Q332 575 282 592 L238 592 Q188 575 183 520 L168 382 Q135 288 135 210 Z"
+        <image
+          href={fullAssemblyImage}
+          x="60"
+          y="14"
+          width="400"
+          height="612"
+          preserveAspectRatio="xMidYMid meet"
         />
-        <path
-          className="center-panel"
-          d="M230 48 L290 48 Q305 230 292 520 L228 520 Q215 230 230 48 Z"
-        />
-
-        <rect className="wheel left-wheel" x="86" y="360" width="56" height="142" rx="14" />
-        <rect className="wheel right-wheel" x="378" y="360" width="56" height="142" rx="14" />
-        <WheelArrow x={114} y={431} side="left" speed={wheelSpeeds.left} deadband={deadband} />
-        <WheelArrow x={406} y={431} side="right" speed={wheelSpeeds.right} deadband={deadband} />
-
-        <rect className="label-band" x="142" y="422" width="236" height="58" />
-        <circle className="center-cap" cx="260" cy="451" r="32" />
-        <rect className="yellow-marker" x="214" y="498" width="16" height="48" rx="8" />
-        <rect className="yellow-marker" x="290" y="498" width="16" height="48" rx="8" />
+        <rect className="view-shadow" x="54" y="12" width="412" height="616" rx="34" />
+        <BrushArrow cx={129} cy={157} speed={toolSpeeds.left} deadband={deadband} />
+        <BrushArrow cx={392} cy={157} speed={toolSpeeds.right} deadband={deadband} />
+        <WheelArrow x={114} y={460} side="left" speed={wheelSpeeds.left} deadband={deadband} />
+        <WheelArrow x={406} y={460} side="right" speed={wheelSpeeds.right} deadband={deadband} />
 
         <g
           className={safetyLatched ? "stop-button latched" : "stop-button"}
           filter={safetyLatched ? "url(#redGlow)" : undefined}
         >
-          <rect x="216" y="268" width="88" height="44" rx="12" />
+          <rect x="216" y="284" width="88" height="44" rx="12" />
           <text x="260" y="297">
             STOP
           </text>
         </g>
-
-        <text className="robot-caption" x="260" y="625">
-          Wheel arrows: forward/backward · Brush arrows: CW/CCW · STOP glows when latched
-        </text>
       </svg>
     </div>
   );
@@ -581,24 +540,6 @@ function RobotTopView({
 
 function StatusPill({ label, tone = "neutral" }: { label: string; tone?: string }): ReactElement {
   return <span className={`status-pill ${tone}`}>{label}</span>;
-}
-
-function Card({
-  title,
-  children,
-  footer,
-}: {
-  title: string;
-  children: ReactElement | ReactElement[];
-  footer?: string;
-}): ReactElement {
-  return (
-    <section className="card">
-      <h2>{title}</h2>
-      <div className="card-body">{children}</div>
-      {footer != undefined && <div className="card-footer">Updated {footer}</div>}
-    </section>
-  );
 }
 
 function Metric({
@@ -612,27 +553,6 @@ function Metric({
     <div className="metric">
       <span>{label}</span>
       <strong>{value ?? "—"}</strong>
-    </div>
-  );
-}
-
-function DiagnosticsSummary({
-  diagnostics,
-}: {
-  diagnostics?: LatestMessage<DiagnosticArray>;
-}): ReactElement {
-  const severity = latestSeverity(diagnostics);
-  const statuses = diagnostics?.message.status ?? [];
-  return (
-    <div className="diagnostics">
-      <StatusPill label={severity.label} tone={severity.className} />
-      {statuses.slice(0, 3).map((status, index) => (
-        <div className="diagnostic-row" key={`${status.name ?? "diagnostic"}-${index}`}>
-          <span>{status.name ?? "diagnostic"}</span>
-          <strong>{status.message ?? DIAGNOSTIC_LEVELS[status.level ?? 0]?.label ?? "—"}</strong>
-        </div>
-      ))}
-      {statuses.length === 0 && <p className="muted">No diagnostic messages received.</p>}
     </div>
   );
 }
@@ -680,7 +600,10 @@ function ServiceControls({
   );
 
   return (
-    <Card title="Operator Controls">
+    <section className="control-panel">
+      <div className="section-heading">
+        <h2>Controls</h2>
+      </div>
       <div className="button-grid">
         <button
           onClick={() => {
@@ -780,10 +703,10 @@ function ServiceControls({
       </div>
       <div className={`service-result ${serviceState.status}`}>
         <strong>{serviceState.status.toUpperCase()}</strong>
-        {serviceState.name && <span>{serviceState.name}</span>}
+        {serviceState.name && <span className="service-name">{serviceState.name}</span>}
         {serviceState.message && <code>{serviceState.message}</code>}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -902,279 +825,359 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
   const safetyStopIsStale = isStale(topicState.safetyStop, nowMs, config.staleAfterSeconds);
   const safetyLatched = !safetyStatusIsStale && isSafetyStopLatched(topicState.safetyStatus);
   const hasSafetyStop = !safetyStopIsStale && topicState.safetyStop != undefined;
+  const systemInfoIsStale = isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds);
+  const batteryIsStale = isStale(topicState.batteryState, nowMs, config.staleAfterSeconds);
+  const fsmIsStale = isStale(
+    topicState.fsmStatus ?? topicState.fsmState,
+    nowMs,
+    config.staleAfterSeconds,
+  );
 
   return (
     <div className="amr-panel">
       <style>{STYLES}</style>
-      <header className="hero">
-        <div>
-          <p>O-Robotics</p>
-          <h1>AMR Sweeper Panel</h1>
-        </div>
-        <div className="hero-status" style={{ borderColor: fsmColor }}>
-          <span style={{ background: fsmColor }} />
-          <strong>{fsmState}</strong>
-          <small>Profile {fsm?.current_profile ?? "—"}</small>
-        </div>
-      </header>
-
-      <main className="grid">
-        <Card title="Robot Motion">
-          <RobotTopView
-            wheelSpeeds={twistWheelSpeeds(topicState.wheelCommand, nowMs, config)}
-            toolSpeeds={twistToolSpeeds(topicState.toolCommand, nowMs, config)}
-            safetyLatched={safetyLatched}
-            deadband={config.motionDeadband}
-          />
-          <div className="motion-legend">
-            <StatusPill
-              label={safetyLatched ? "SAFETY STOP LATCHED" : "SAFETY READY"}
-              tone={safetyLatched ? "error" : "ok"}
-            />
-            <span>Wheel cmd: {ageLabel(topicState.wheelCommand, nowMs)}</span>
-            <span>Tool cmd: {ageLabel(topicState.toolCommand, nowMs)}</span>
+      <div className="panel-shell">
+        <header className="hero">
+          <div>
+            <p>O-Robotics</p>
+            <h1>AMR Sweeper Panel</h1>
           </div>
-        </Card>
-
-        <Card title="System Info" footer={ageLabel(topicState.systemInfo, nowMs)}>
-          <div className="stale-row">
-            <StatusPill
-              label={
-                isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"
-              }
-              tone={
-                isStale(topicState.systemInfo, nowMs, config.staleAfterSeconds) ? "stale" : "ok"
-              }
-            />
+          <div className="hero-status" style={{ borderColor: fsmColor }}>
+            <span style={{ background: fsmColor }} />
+            <strong>{fsmState}</strong>
+            <small>Profile {fsm?.current_profile ?? "—"}</small>
           </div>
-          <Metric label="Device" value={topicState.systemInfo?.message.device_type} />
-          <Metric label="Robot #" value={topicState.systemInfo?.message.robot_number} />
-          <Metric
-            label="Temperature"
-            value={formatNumber(topicState.systemInfo?.message.temperature, 0, "°C")}
-          />
-          <Metric
-            label="CPU load"
-            value={formatNumber(topicState.systemInfo?.message.cpu_load, 0, "%")}
-          />
-          <Metric
-            label="CPU idle"
-            value={formatNumber(topicState.systemInfo?.message.cpu_idle, 0, "%")}
-          />
-          <Metric
-            label="Memory"
-            value={formatNumber(topicState.systemInfo?.message.memory_usage, 0, "%")}
-          />
-          <Metric
-            label="Disk"
-            value={formatNumber(topicState.systemInfo?.message.disk_usage, 0, "%")}
-          />
-          <Metric label="Connection" value={topicState.systemInfo?.message.conn_type} />
-          <Metric
-            label="Wi-Fi / Mobile"
-            value={`${topicState.systemInfo?.message.is_wifi === true ? "Wi-Fi" : "—"} / ${
-              topicState.systemInfo?.message.is_mobile === true ? "Mobile" : "—"
-            }`}
-          />
-        </Card>
+        </header>
 
-        <Card title="Battery" footer={ageLabel(topicState.batteryState, nowMs)}>
-          <div className="stale-row">
-            <StatusPill label={batterySeverity.label} tone={batterySeverity.className} />
-            <StatusPill
-              label={
-                isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "STALE" : "LIVE"
-              }
-              tone={
-                isStale(topicState.batteryState, nowMs, config.staleAfterSeconds) ? "stale" : "ok"
-              }
+        <main className="dashboard">
+          <section className="visual-panel">
+            <RobotTopView
+              wheelSpeeds={twistWheelSpeeds(topicState.wheelCommand, nowMs, config)}
+              toolSpeeds={twistToolSpeeds(topicState.toolCommand, nowMs, config)}
+              safetyLatched={safetyLatched}
+              deadband={config.motionDeadband}
             />
-          </div>
-          <Metric
-            label="Charge"
-            value={formatPercent(topicState.batteryState?.message.percentage)}
-          />
-          <Metric
-            label="Voltage"
-            value={formatNumber(topicState.batteryState?.message.voltage, 2, " V")}
-          />
-          <Metric
-            label="Current"
-            value={formatNumber(topicState.batteryState?.message.current, 2, " A")}
-          />
-          <Metric
-            label="State"
-            value={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)}
-          />
-          <Metric
-            label="Max temp"
-            value={formatNumber(topicState.batteryState?.message.temperature, 1, "°C")}
-          />
-          <Metric
-            label="Cells"
-            value={topicState.batteryState?.message.cell_voltage?.length ?? "—"}
-          />
-          <DiagnosticsSummary diagnostics={topicState.batteryHealth} />
-        </Card>
+            <div className="motion-legend">
+              <StatusPill
+                label={systemInfoIsStale ? "SYS STALE" : "SYS LIVE"}
+                tone={systemInfoIsStale ? "stale" : "ok"}
+              />
+              <StatusPill label={batterySeverity.label} tone={batterySeverity.className} />
+              <StatusPill label={safetySeverity.label} tone={safetySeverity.className} />
+              <span>Wheel {ageLabel(topicState.wheelCommand, nowMs)}</span>
+              <span>Tool {ageLabel(topicState.toolCommand, nowMs)}</span>
+            </div>
+          </section>
 
-        <Card
-          title="FSM Supervisor"
-          footer={ageLabel(topicState.fsmStatus ?? topicState.fsmState, nowMs)}
-        >
-          <div className="stale-row">
-            <StatusPill
-              label={
-                isStale(
-                  topicState.fsmStatus ?? topicState.fsmState,
-                  nowMs,
-                  config.staleAfterSeconds,
-                )
-                  ? "STALE"
-                  : "LIVE"
-              }
-              tone={
-                isStale(
-                  topicState.fsmStatus ?? topicState.fsmState,
-                  nowMs,
-                  config.staleAfterSeconds,
-                )
-                  ? "stale"
-                  : "ok"
-              }
-            />
-          </div>
-          <Metric label="State" value={fsmState} />
-          <Metric label="Lifecycle" value={fsmStatusMessage?.current_lifecycle_state} />
-          <Metric label="Current profile" value={fsm?.current_profile} />
-          <Metric label="Transition profile" value={fsmStatusMessage?.transitioning_to_profile} />
-          <Metric label="Transition" value={fsmStatusMessage?.transition_status} />
-          <Metric label="Requester" value={fsmStatusMessage?.last_requester} />
-          <Metric label="Priority" value={fsmStatusMessage?.last_request_priority} />
-          <Metric label="Priority gate" value={fsmStatusMessage?.effective_priority_gate} />
-          <Metric
-            label="Priority age"
-            value={formatNumber(fsmStatusMessage?.priority_age_sec, 1, "s")}
-          />
-          <p className="message-box">
-            {fsmStatusMessage?.last_message ?? "No FSM status message received."}
-          </p>
-        </Card>
-
-        <Card
-          title="Safety"
-          footer={ageLabel(topicState.safetyStatus ?? topicState.safetyStop, nowMs)}
-        >
-          <div className="stale-row">
-            <StatusPill
-              label={hasSafetyStop ? "STOP SEEN" : "NO STOP MSG"}
-              tone={hasSafetyStop ? "error" : "neutral"}
-            />
-            <StatusPill label={safetySeverity.label} tone={safetySeverity.className} />
-            <StatusPill
-              label={safetyStatusIsStale ? "STALE" : "LIVE"}
-              tone={safetyStatusIsStale ? "stale" : "ok"}
-            />
-          </div>
-          <Metric label="Last sender" value={topicState.safetyStop?.message.sender} />
-          <p className="message-box">
-            {topicState.safetyStop?.message.reason ?? "No safety stop reason received."}
-          </p>
-          <DiagnosticsSummary diagnostics={topicState.safetyStatus} />
-        </Card>
-
-        <ServiceControls
-          context={context}
-          config={config}
-          serviceState={serviceState}
-          setServiceState={setServiceState}
-        />
-
-        <Card title="Configured Interfaces">
-          <div className="topic-list">
-            {Object.entries(topics).map(([label, topic]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <code>{topic}</code>
+          <aside className="sidebar">
+            <section className="info-section primary">
+              <div className="section-heading">
+                <h2>State</h2>
+                <span>{ageLabel(topicState.fsmStatus ?? topicState.fsmState, nowMs)}</span>
               </div>
-            ))}
-          </div>
-        </Card>
-      </main>
+              <div className="pill-row">
+                <StatusPill
+                  label={fsmIsStale ? "FSM STALE" : "FSM LIVE"}
+                  tone={fsmIsStale ? "stale" : "ok"}
+                />
+                <StatusPill
+                  label={safetyLatched ? "SAFETY LATCHED" : "SAFETY READY"}
+                  tone={safetyLatched ? "error" : "ok"}
+                />
+              </div>
+              <Metric label="Lifecycle" value={fsmStatusMessage?.current_lifecycle_state} />
+              <Metric label="Profile" value={fsm?.current_profile} />
+              <Metric label="Requester" value={fsmStatusMessage?.last_requester} />
+            </section>
+
+            <section className="info-section">
+              <div className="section-heading">
+                <h2>Battery</h2>
+                <span>{ageLabel(topicState.batteryState, nowMs)}</span>
+              </div>
+              <div className="pill-row">
+                <StatusPill
+                  label={batteryIsStale ? "STALE" : "LIVE"}
+                  tone={batteryIsStale ? "stale" : "ok"}
+                />
+                <StatusPill
+                  label={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)}
+                  tone="neutral"
+                />
+              </div>
+              <Metric
+                label="Charge"
+                value={formatPercent(topicState.batteryState?.message.percentage)}
+              />
+              <Metric
+                label="Voltage"
+                value={formatNumber(topicState.batteryState?.message.voltage, 1, "V")}
+              />
+              <Metric
+                label="Temp"
+                value={formatNumber(topicState.batteryState?.message.temperature, 0, "°C")}
+              />
+            </section>
+
+            <section className="info-section">
+              <div className="section-heading">
+                <h2>System</h2>
+                <span>{ageLabel(topicState.systemInfo, nowMs)}</span>
+              </div>
+              <Metric label="Robot" value={topicState.systemInfo?.message.robot_number} />
+              <Metric
+                label="CPU"
+                value={formatNumber(topicState.systemInfo?.message.cpu_load, 0, "%")}
+              />
+              <Metric
+                label="Mem"
+                value={formatNumber(topicState.systemInfo?.message.memory_usage, 0, "%")}
+              />
+              <Metric label="Conn" value={topicState.systemInfo?.message.conn_type} />
+            </section>
+
+            <section className="info-section safety">
+              <div className="section-heading">
+                <h2>Safety</h2>
+                <span>{ageLabel(topicState.safetyStatus ?? topicState.safetyStop, nowMs)}</span>
+              </div>
+              <div className="pill-row">
+                <StatusPill
+                  label={hasSafetyStop ? "STOP SEEN" : "NO STOP"}
+                  tone={hasSafetyStop ? "error" : "neutral"}
+                />
+                <StatusPill
+                  label={safetyStatusIsStale ? "STALE" : "LIVE"}
+                  tone={safetyStatusIsStale ? "stale" : "ok"}
+                />
+              </div>
+              <Metric label="Sender" value={topicState.safetyStop?.message.sender} />
+              <p className="message-box compact">
+                {topicState.safetyStop?.message.reason ?? "No safety stop reason received."}
+              </p>
+            </section>
+
+            <ServiceControls
+              context={context}
+              config={config}
+              serviceState={serviceState}
+              setServiceState={setServiceState}
+            />
+          </aside>
+        </main>
+      </div>
     </div>
   );
 }
 
 const STYLES = `
 .amr-panel {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
   min-height: 100%;
-  padding: 16px;
+  overflow: hidden;
+  padding: 8px;
   color: #e2e8f0;
-  background: #0f172a;
+  background: radial-gradient(circle at top, #0f2740 0%, #07101c 58%, #02070f 100%);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.panel-shell {
+  box-sizing: border-box;
+  width: 650px;
+  max-width: 650px;
+  height: 400px;
+  max-height: 400px;
+  overflow: hidden;
+  border: 1px solid #15314a;
+  border-radius: 18px;
+  background: rgba(3, 10, 20, 0.92);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
+  padding: 10px;
 }
 .hero {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.hero p { color: #94a3b8; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.18em; font-size: 11px; }
-.hero h1 { margin: 0; font-size: 28px; }
-.hero-status { align-items: center; background: #111827; border: 1px solid #334155; border-radius: 999px; display: flex; gap: 10px; padding: 10px 14px; }
-.hero-status span { border-radius: 999px; display: block; height: 12px; width: 12px; }
-.hero-status small { color: #94a3b8; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
-.card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 14px; box-shadow: 0 12px 28px rgba(0,0,0,0.24); }
-.card h2 { font-size: 16px; margin: 0 0 12px; }
-.card-body { display: flex; flex-direction: column; gap: 8px; }
-.card-footer { color: #94a3b8; font-size: 12px; margin-top: 12px; }
-.metric, .diagnostic-row, .topic-list div { align-items: center; border-bottom: 1px solid #1f2937; display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
-.metric span, .diagnostic-row span, .topic-list span { color: #94a3b8; }
-.metric strong, .diagnostic-row strong { text-align: right; }
-.status-pill { border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 8px; width: max-content; }
+.hero p { color: #7cb6df; margin: 0 0 3px; text-transform: uppercase; letter-spacing: 0.16em; font-size: 9px; }
+.hero h1 { margin: 0; font-size: 19px; line-height: 1.1; }
+.hero-status { align-items: center; background: rgba(12, 22, 38, 0.95); border: 1px solid #334155; border-radius: 999px; display: flex; gap: 8px; padding: 7px 10px; }
+.hero-status span { border-radius: 999px; display: block; height: 10px; width: 10px; }
+.hero-status strong { font-size: 12px; }
+.hero-status small { color: #94a3b8; font-size: 10px; }
+.dashboard {
+  display: grid;
+  grid-template-columns: 418px 202px;
+  gap: 10px;
+  height: calc(100% - 48px);
+}
+.visual-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.sidebar {
+  display: grid;
+  grid-template-rows: repeat(4, minmax(0, auto)) 1fr;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.info-section, .control-panel {
+  background: rgba(10, 20, 34, 0.92);
+  border: 1px solid #203449;
+  border-radius: 12px;
+  padding: 7px 8px;
+  min-width: 0;
+}
+.info-section.primary {
+  background: linear-gradient(180deg, rgba(16, 34, 56, 0.96), rgba(8, 18, 31, 0.96));
+}
+.section-heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.section-heading h2 {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.section-heading span {
+  color: #8ba5bd;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.metric {
+  align-items: center;
+  border-top: 1px solid rgba(42, 61, 79, 0.85);
+  display: flex;
+  font-size: 10px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0 0;
+  margin-top: 4px;
+}
+.metric span { color: #8fa8c2; }
+.metric strong { font-size: 10px; text-align: right; }
+.status-pill { border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; padding: 3px 7px; width: max-content; }
 .status-pill.ok { background: rgba(34,197,94,0.16); color: #86efac; }
 .status-pill.warn { background: rgba(245,158,11,0.16); color: #fcd34d; }
 .status-pill.error { background: rgba(239,68,68,0.18); color: #fca5a5; }
 .status-pill.stale { background: rgba(148,163,184,0.16); color: #cbd5e1; }
 .status-pill.neutral { background: rgba(59,130,246,0.14); color: #93c5fd; }
-.stale-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.message-box { background: #0f172a; border: 1px solid #1f2937; border-radius: 10px; color: #cbd5e1; margin: 4px 0 0; padding: 10px; }
-.muted { color: #94a3b8; margin: 0; }
-.button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-button { background: #2563eb; border: 0; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; padding: 10px 12px; }
-button:hover { background: #1d4ed8; }
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.message-box {
+  background: rgba(5, 13, 24, 0.85);
+  border: 1px solid #1f2937;
+  border-radius: 9px;
+  color: #cbd5e1;
+  margin: 4px 0 0;
+  padding: 8px;
+}
+.message-box.compact {
+  font-size: 10px;
+  line-height: 1.25;
+  max-height: 46px;
+  overflow: hidden;
+}
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+button {
+  background: linear-gradient(180deg, #2e7bf6, #1858c9);
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  min-height: 28px;
+  padding: 5px 6px;
+}
+button:hover { background: linear-gradient(180deg, #3b89ff, #2064db); }
 button:disabled { background: #475569; cursor: not-allowed; }
-button.danger { background: #dc2626; }
-button.danger:hover { background: #b91c1c; }
-.service-result { background: #0f172a; border: 1px solid #1f2937; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 10px; }
-.service-result code, .topic-list code { color: #bfdbfe; font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+button.danger { background: linear-gradient(180deg, #dc2626, #b91c1c); }
+button.danger:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
+.service-result {
+  background: rgba(5, 13, 24, 0.8);
+  border: 1px solid #1f2937;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  min-height: 42px;
+  padding: 6px 7px;
+}
+.service-result code {
+  color: #bfdbfe;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 9px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.service-name {
+  color: #8ba5bd;
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .service-result.success strong { color: #86efac; }
 .service-result.error strong { color: #fca5a5; }
 .service-result.pending strong { color: #fcd34d; }
-.diagnostics { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 
-.robot-view-shell { align-items: center; background: #020617; border: 1px solid #1f2937; border-radius: 14px; display: flex; justify-content: center; overflow: hidden; padding: 10px; }
-.robot-view { max-height: 520px; width: 100%; }
-.robot-body { fill: url(#bodyGradient); stroke: #6b7280; stroke-width: 5; }
-.center-panel { fill: rgba(226,232,240,0.34); stroke: none; }
-.wheel { fill: url(#tread); stroke: #fde047; stroke-width: 5; }
-.brush line { stroke: #dc2626; stroke-linecap: round; stroke-width: 3; }
-.brush circle { fill: rgba(127,29,29,0.2); stroke: rgba(220,38,38,0.7); stroke-width: 2; }
+.robot-view-shell {
+  align-items: center;
+  background: radial-gradient(circle at top, rgba(17, 40, 65, 0.82), rgba(2, 7, 15, 0.94));
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px;
+}
+.robot-view { height: 100%; width: 100%; }
+.view-shadow { fill: url(#shadowFade); stroke: rgba(107, 114, 128, 0.35); stroke-width: 3; }
 .motion-arrow line, .motion-arrow path { fill: none; stroke: #38bdf8; stroke-linecap: round; stroke-width: 7; }
 .motion-arrow polygon { fill: #38bdf8; stroke: none; }
 .brush-arrow path { stroke: #f97316; }
 .brush-arrow polygon { fill: #f97316; }
 .brush-arrow text { fill: #fed7aa; font-size: 18px; font-weight: 800; text-anchor: middle; }
-.label-band { fill: #334155; opacity: 0.82; }
-.center-cap { fill: #9ca3af; stroke: #334155; stroke-width: 4; }
-.yellow-marker { fill: #fde047; }
-.stop-button rect { fill: #f87171; stroke: #ef4444; stroke-width: 3; }
-.stop-button text { fill: #991b1b; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-anchor: middle; }
+.stop-button rect { fill: rgba(248, 113, 113, 0.88); stroke: #ef4444; stroke-width: 3; }
+.stop-button text { fill: #fff5f5; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-anchor: middle; dominant-baseline: middle; }
 .stop-button.latched rect { fill: #ff0000; stroke: #fecaca; stroke-width: 5; }
 .stop-button.latched text { fill: #ffffff; }
-.robot-caption { fill: #94a3b8; font-size: 13px; text-anchor: middle; }
-.motion-legend { align-items: center; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 10px; }
+.motion-legend {
+  align-items: center;
+  color: #94a3b8;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 9px;
+  line-height: 1.2;
+  min-height: 34px;
+}
 `;
 
 export function initAmrSweeperPanel(context: PanelExtensionContext): () => void {
