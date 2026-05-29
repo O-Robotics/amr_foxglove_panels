@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: write
   contents: read
 
 concurrency:
@@ -41,10 +42,36 @@ jobs:
       - name: Build Foxglove panel
         run: npm run build
 
+      - name: Archive existing packaged panels
+        run: |
+          mkdir -p archive
+          touch archive/.gitkeep
+          find . -maxdepth 1 -name "*.foxe" -exec mv {} archive/ \;
+
+      - name: Bump panel version
+        if: github.event_name != 'pull_request'
+        run: npm version patch --no-git-tag-version
+
       - name: Package Foxglove panel
         run: npm run package
 
       - name: List packaged files
+        run: |
+          find archive -maxdepth 1 -name "*.foxe" -print || true
+          find . -maxdepth 1 -name "*.foxe" -print
+
+      - name: Commit packaged panel to repository
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A .
+          if git diff --cached --quiet; then
+            echo "No packaged panel changes to commit."
+            exit 0
+          fi
+          git commit -m "Update packaged AMR Sweeper Foxglove panel [skip ci]"
+          git push
         run: find . -maxdepth 1 -name "*.foxe" -print
 
       - name: Upload .foxe artifact
