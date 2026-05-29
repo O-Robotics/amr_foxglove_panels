@@ -837,18 +837,6 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
     <div className="amr-panel">
       <style>{STYLES}</style>
       <div className="panel-shell">
-        <header className="hero">
-          <div>
-            <p>O-Robotics</p>
-            <h1>AMR Sweeper Panel</h1>
-          </div>
-          <div className="hero-status" style={{ borderColor: fsmColor }}>
-            <span style={{ background: fsmColor }} />
-            <strong>{fsmState}</strong>
-            <small>Profile {fsm?.current_profile ?? "—"}</small>
-          </div>
-        </header>
-
         <main className="dashboard">
           <section className="visual-panel">
             <RobotTopView
@@ -858,98 +846,68 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
               deadband={config.motionDeadband}
             />
             <div className="motion-legend">
+              <StatusPill label={fsmState} tone={fsmIsStale ? "stale" : "neutral"} />
               <StatusPill
-                label={systemInfoIsStale ? "SYS STALE" : "SYS LIVE"}
-                tone={systemInfoIsStale ? "stale" : "ok"}
+                label={safetyLatched ? "LATCHED" : "READY"}
+                tone={safetyLatched ? "error" : "ok"}
               />
               <StatusPill label={batterySeverity.label} tone={batterySeverity.className} />
-              <StatusPill label={safetySeverity.label} tone={safetySeverity.className} />
-              <span>Wheel {ageLabel(topicState.wheelCommand, nowMs)}</span>
-              <span>Tool {ageLabel(topicState.toolCommand, nowMs)}</span>
+              <span>W {ageLabel(topicState.wheelCommand, nowMs)}</span>
+              <span>T {ageLabel(topicState.toolCommand, nowMs)}</span>
             </div>
           </section>
 
           <aside className="sidebar">
-            <section className="info-section primary">
-              <div className="section-heading">
-                <h2>State</h2>
-                <span>{ageLabel(topicState.fsmStatus ?? topicState.fsmState, nowMs)}</span>
-              </div>
+            <section className="info-section status-strip">
               <div className="pill-row">
                 <StatusPill
-                  label={fsmIsStale ? "FSM STALE" : "FSM LIVE"}
-                  tone={fsmIsStale ? "stale" : "ok"}
+                  label={systemInfoIsStale ? "SYS" : "SYS OK"}
+                  tone={systemInfoIsStale ? "stale" : "ok"}
                 />
                 <StatusPill
-                  label={safetyLatched ? "SAFETY LATCHED" : "SAFETY READY"}
-                  tone={safetyLatched ? "error" : "ok"}
-                />
-              </div>
-              <Metric label="Lifecycle" value={fsmStatusMessage?.current_lifecycle_state} />
-              <Metric label="Profile" value={fsm?.current_profile} />
-              <Metric label="Requester" value={fsmStatusMessage?.last_requester} />
-            </section>
-
-            <section className="info-section">
-              <div className="section-heading">
-                <h2>Battery</h2>
-                <span>{ageLabel(topicState.batteryState, nowMs)}</span>
-              </div>
-              <div className="pill-row">
-                <StatusPill
-                  label={batteryIsStale ? "STALE" : "LIVE"}
+                  label={batteryIsStale ? "BAT" : "BAT OK"}
                   tone={batteryIsStale ? "stale" : "ok"}
                 />
                 <StatusPill
-                  label={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)}
-                  tone="neutral"
+                  label={safetyStatusIsStale ? "SAFE" : "SAFE OK"}
+                  tone={safetyStatusIsStale ? "stale" : "ok"}
                 />
               </div>
+              <div className="mini-state" style={{ color: fsmColor }}>
+                <strong>{fsmState}</strong>
+                <span>P{fsm?.current_profile ?? "—"}</span>
+              </div>
+            </section>
+
+            <section className="info-section">
+              <Metric label="Lifecycle" value={fsmStatusMessage?.current_lifecycle_state} />
+              <Metric label="Requester" value={fsmStatusMessage?.last_requester} />
               <Metric
                 label="Charge"
                 value={formatPercent(topicState.batteryState?.message.percentage)}
               />
               <Metric
-                label="Voltage"
+                label="Volt"
                 value={formatNumber(topicState.batteryState?.message.voltage, 1, "V")}
               />
               <Metric
-                label="Temp"
-                value={formatNumber(topicState.batteryState?.message.temperature, 0, "°C")}
+                label="State"
+                value={batteryStatusLabel(topicState.batteryState?.message.power_supply_status)}
               />
-            </section>
-
-            <section className="info-section">
-              <div className="section-heading">
-                <h2>System</h2>
-                <span>{ageLabel(topicState.systemInfo, nowMs)}</span>
-              </div>
-              <Metric label="Robot" value={topicState.systemInfo?.message.robot_number} />
               <Metric
                 label="CPU"
                 value={formatNumber(topicState.systemInfo?.message.cpu_load, 0, "%")}
-              />
-              <Metric
-                label="Mem"
-                value={formatNumber(topicState.systemInfo?.message.memory_usage, 0, "%")}
               />
               <Metric label="Conn" value={topicState.systemInfo?.message.conn_type} />
             </section>
 
             <section className="info-section safety">
-              <div className="section-heading">
-                <h2>Safety</h2>
-                <span>{ageLabel(topicState.safetyStatus ?? topicState.safetyStop, nowMs)}</span>
-              </div>
               <div className="pill-row">
                 <StatusPill
-                  label={hasSafetyStop ? "STOP SEEN" : "NO STOP"}
+                  label={hasSafetyStop ? "STOP" : "NO STOP"}
                   tone={hasSafetyStop ? "error" : "neutral"}
                 />
-                <StatusPill
-                  label={safetyStatusIsStale ? "STALE" : "LIVE"}
-                  tone={safetyStatusIsStale ? "stale" : "ok"}
-                />
+                <StatusPill label={safetySeverity.label} tone={safetySeverity.className} />
               </div>
               <Metric label="Sender" value={topicState.safetyStop?.message.sender} />
               <p className="message-box compact">
@@ -973,90 +931,87 @@ function AmrSweeperPanel({ context }: { context: PanelExtensionContext }): React
 const STYLES = `
 .amr-panel {
   align-items: center;
+  box-sizing: border-box;
   display: flex;
-  height: 100%;
+  width: 650px;
+  min-width: 650px;
+  max-width: 650px;
+  height: 400px;
+  min-height: 400px;
+  max-height: 400px;
   justify-content: center;
-  min-height: 100%;
   overflow: hidden;
-  padding: 8px;
+  padding: 0;
   color: #e2e8f0;
   background: radial-gradient(circle at top, #0f2740 0%, #07101c 58%, #02070f 100%);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.panel-shell {
+.amr-panel .panel-shell {
   box-sizing: border-box;
-  width: 650px;
-  max-width: 650px;
-  height: 400px;
-  max-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden;
   border: 1px solid #15314a;
-  border-radius: 18px;
+  border-radius: 12px;
   background: rgba(3, 10, 20, 0.92);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
-  padding: 10px;
+  padding: 6px;
 }
-.hero {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.hero p { color: #7cb6df; margin: 0 0 3px; text-transform: uppercase; letter-spacing: 0.16em; font-size: 9px; }
-.hero h1 { margin: 0; font-size: 19px; line-height: 1.1; }
-.hero-status { align-items: center; background: rgba(12, 22, 38, 0.95); border: 1px solid #334155; border-radius: 999px; display: flex; gap: 8px; padding: 7px 10px; }
-.hero-status span { border-radius: 999px; display: block; height: 10px; width: 10px; }
-.hero-status strong { font-size: 12px; }
-.hero-status small { color: #94a3b8; font-size: 10px; }
-.dashboard {
+.amr-panel .dashboard {
   display: grid;
-  grid-template-columns: 418px 202px;
-  gap: 10px;
-  height: calc(100% - 48px);
+  grid-template-columns: 420px 212px;
+  column-gap: 6px;
+  width: 100%;
+  height: 100%;
 }
-.visual-panel {
+.amr-panel .visual-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  width: 420px;
+  height: 386px;
   min-width: 0;
 }
-.sidebar {
+.amr-panel .sidebar {
   display: grid;
-  grid-template-rows: repeat(4, minmax(0, auto)) 1fr;
-  gap: 6px;
+  grid-template-rows: 42px 108px 70px 154px;
+  gap: 4px;
+  width: 212px;
+  height: 386px;
   min-width: 0;
   overflow: hidden;
 }
-.info-section, .control-panel {
+.amr-panel .info-section, .amr-panel .control-panel {
   background: rgba(10, 20, 34, 0.92);
   border: 1px solid #203449;
-  border-radius: 12px;
-  padding: 7px 8px;
+  border-radius: 9px;
+  padding: 5px 6px;
   min-width: 0;
 }
-.info-section.primary {
-  background: linear-gradient(180deg, rgba(16, 34, 56, 0.96), rgba(8, 18, 31, 0.96));
+.amr-panel .status-strip {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px;
 }
-.section-heading {
-  align-items: baseline;
+.amr-panel .mini-state {
+  align-items: flex-end;
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 5px;
+  flex-direction: column;
+  gap: 1px;
 }
-.section-heading h2 {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  margin: 0;
-  text-transform: uppercase;
+.amr-panel .mini-state strong {
+  font-size: 12px;
+  line-height: 1;
 }
-.section-heading span {
+.amr-panel .mini-state span {
   color: #8ba5bd;
   font-size: 9px;
-  white-space: nowrap;
+  line-height: 1;
 }
-.metric {
+.amr-panel .metric {
   align-items: center;
   border-top: 1px solid rgba(42, 61, 79, 0.85);
   display: flex;
@@ -1066,20 +1021,20 @@ const STYLES = `
   padding: 4px 0 0;
   margin-top: 4px;
 }
-.metric span { color: #8fa8c2; }
-.metric strong { font-size: 10px; text-align: right; }
-.status-pill { border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; padding: 3px 7px; width: max-content; }
-.status-pill.ok { background: rgba(34,197,94,0.16); color: #86efac; }
-.status-pill.warn { background: rgba(245,158,11,0.16); color: #fcd34d; }
-.status-pill.error { background: rgba(239,68,68,0.18); color: #fca5a5; }
-.status-pill.stale { background: rgba(148,163,184,0.16); color: #cbd5e1; }
-.status-pill.neutral { background: rgba(59,130,246,0.14); color: #93c5fd; }
-.pill-row {
+.amr-panel .metric span { color: #8fa8c2; }
+.amr-panel .metric strong { font-size: 10px; text-align: right; }
+.amr-panel .status-pill { border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; padding: 3px 7px; width: max-content; }
+.amr-panel .status-pill.ok { background: rgba(34,197,94,0.16); color: #86efac; }
+.amr-panel .status-pill.warn { background: rgba(245,158,11,0.16); color: #fcd34d; }
+.amr-panel .status-pill.error { background: rgba(239,68,68,0.18); color: #fca5a5; }
+.amr-panel .status-pill.stale { background: rgba(148,163,184,0.16); color: #cbd5e1; }
+.amr-panel .status-pill.neutral { background: rgba(59,130,246,0.14); color: #93c5fd; }
+.amr-panel .pill-row {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
-.message-box {
+.amr-panel .message-box {
   background: rgba(5, 13, 24, 0.85);
   border: 1px solid #1f2937;
   border-radius: 9px;
@@ -1087,18 +1042,18 @@ const STYLES = `
   margin: 4px 0 0;
   padding: 8px;
 }
-.message-box.compact {
+.amr-panel .message-box.compact {
   font-size: 10px;
   line-height: 1.25;
-  max-height: 46px;
+  max-height: 34px;
   overflow: hidden;
 }
-.button-grid {
+.amr-panel .button-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
+  gap: 4px;
 }
-button {
+.amr-panel button {
   background: linear-gradient(180deg, #2e7bf6, #1858c9);
   border: 0;
   border-radius: 8px;
@@ -1108,24 +1063,24 @@ button {
   font-weight: 700;
   line-height: 1.15;
   min-height: 28px;
-  padding: 5px 6px;
+  padding: 4px 6px;
 }
-button:hover { background: linear-gradient(180deg, #3b89ff, #2064db); }
-button:disabled { background: #475569; cursor: not-allowed; }
-button.danger { background: linear-gradient(180deg, #dc2626, #b91c1c); }
-button.danger:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
-.service-result {
+.amr-panel button:hover { background: linear-gradient(180deg, #3b89ff, #2064db); }
+.amr-panel button:disabled { background: #475569; cursor: not-allowed; }
+.amr-panel button.danger { background: linear-gradient(180deg, #dc2626, #b91c1c); }
+.amr-panel button.danger:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
+.amr-panel .service-result {
   background: rgba(5, 13, 24, 0.8);
   border: 1px solid #1f2937;
   border-radius: 9px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: 6px;
-  min-height: 42px;
-  padding: 6px 7px;
+  margin-top: 4px;
+  min-height: 34px;
+  padding: 5px 6px;
 }
-.service-result code {
+.amr-panel .service-result code {
   color: #bfdbfe;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 9px;
@@ -1134,49 +1089,53 @@ button.danger:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.service-name {
+.amr-panel .service-name {
   color: #8ba5bd;
   font-size: 9px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.service-result.success strong { color: #86efac; }
-.service-result.error strong { color: #fca5a5; }
-.service-result.pending strong { color: #fcd34d; }
+.amr-panel .service-result.success strong { color: #86efac; }
+.amr-panel .service-result.error strong { color: #fca5a5; }
+.amr-panel .service-result.pending strong { color: #fcd34d; }
 
-.robot-view-shell {
+.amr-panel .robot-view-shell {
   align-items: center;
   background: radial-gradient(circle at top, rgba(17, 40, 65, 0.82), rgba(2, 7, 15, 0.94));
   border: 1px solid #1f2937;
-  border-radius: 14px;
+  border-radius: 10px;
   display: flex;
-  flex: 1;
+  width: 420px;
+  height: 354px;
   justify-content: center;
   min-height: 0;
   overflow: hidden;
-  padding: 6px;
+  padding: 2px;
 }
-.robot-view { height: 100%; width: 100%; }
-.view-shadow { fill: url(#shadowFade); stroke: rgba(107, 114, 128, 0.35); stroke-width: 3; }
-.motion-arrow line, .motion-arrow path { fill: none; stroke: #38bdf8; stroke-linecap: round; stroke-width: 7; }
-.motion-arrow polygon { fill: #38bdf8; stroke: none; }
-.brush-arrow path { stroke: #f97316; }
-.brush-arrow polygon { fill: #f97316; }
-.brush-arrow text { fill: #fed7aa; font-size: 18px; font-weight: 800; text-anchor: middle; }
-.stop-button rect { fill: rgba(248, 113, 113, 0.88); stroke: #ef4444; stroke-width: 3; }
-.stop-button text { fill: #fff5f5; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-anchor: middle; dominant-baseline: middle; }
-.stop-button.latched rect { fill: #ff0000; stroke: #fecaca; stroke-width: 5; }
-.stop-button.latched text { fill: #ffffff; }
-.motion-legend {
+.amr-panel .robot-view { height: 100%; width: 100%; }
+.amr-panel .view-shadow { fill: url(#shadowFade); stroke: rgba(107, 114, 128, 0.35); stroke-width: 3; }
+.amr-panel .motion-arrow line, .amr-panel .motion-arrow path { fill: none; stroke: #38bdf8; stroke-linecap: round; stroke-width: 7; }
+.amr-panel .motion-arrow polygon { fill: #38bdf8; stroke: none; }
+.amr-panel .brush-arrow path { stroke: #f97316; }
+.amr-panel .brush-arrow polygon { fill: #f97316; }
+.amr-panel .brush-arrow text { fill: #fed7aa; font-size: 18px; font-weight: 800; text-anchor: middle; }
+.amr-panel .stop-button rect { fill: rgba(248, 113, 113, 0.88); stroke: #ef4444; stroke-width: 3; }
+.amr-panel .stop-button text { fill: #fff5f5; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-anchor: middle; dominant-baseline: middle; }
+.amr-panel .stop-button.latched rect { fill: #ff0000; stroke: #fecaca; stroke-width: 5; }
+.amr-panel .stop-button.latched text { fill: #ffffff; }
+.amr-panel .motion-legend {
   align-items: center;
   color: #94a3b8;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   font-size: 9px;
   line-height: 1.2;
-  min-height: 34px;
+  width: 420px;
+  min-height: 28px;
+  max-height: 28px;
+  overflow: hidden;
 }
 `;
 
